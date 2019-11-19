@@ -1,6 +1,23 @@
+from datetime import timezone
+
 from django.db import models
 
 # Create your models here.
 
 class Order(models.Model):
-    id = models.CharField
+    order_status=(
+        (1, "交易中"),
+        (2, "已完成"),
+        (3, "已取消")
+    )
+    id = models.CharField(max_length=200,primary_key=True,default="000",verbose_name="订单流水号")
+#   entid = models.ForeignKey("user.Enterprise",on_delete=models.CASCADE,verbose_name="此订单所属企业") --从所属需求中读取
+    farmers = models.ManyToManyField("user.Farmers",verbose_name="包工头")  # 包工头
+    money = models.IntegerField(default=0,verbose_name="总交易金额") #交易金额
+    moneyToFarmers = models.IntegerField(default=0, verbose_name="给农工金额")
+    moneyToApp = models.IntegerField(default=0, verbose_name="给软件金额")
+    needId = models.ForeignKey("needs.Needs",on_delete=models.CASCADE,verbose_name="此订单所属需求",null=True)
+    beginTime = models.DateTimeField(auto_now_add=True) #订单创建时间
+    lastModified = models.DateTimeField(auto_now=True) #最后一次更改时间
+    status = models.IntegerField(choices = order_status, default = 1,verbose_name="订单状态")
+
