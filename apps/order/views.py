@@ -20,6 +20,15 @@ def cacel_orders(): #取消订单
 
     #订单状态设为已取消（并不删除）
 
+def cancel_farmer_order(request): #企业取消某包工头订单
+    """
+
+    :param request: 需求ID、包工头id（或直接给订单ID？）
+    :return: 成功/失败
+
+    """
+    # 调用取消订单函数
+
 
 def get_orders(request):  # 获取需求对应订单
     """

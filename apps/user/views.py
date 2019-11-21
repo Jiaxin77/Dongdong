@@ -8,7 +8,12 @@ from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 
 from user.serializer import EnterpriseSerializer, FarmersSerializer
+#from user.forms import InfoForm
 import logging as log
+
+
+def index(request):
+    return render(request,"index.html")
 
 # 注册(企业1、农民工2)[小程序返回给哪里？]
 def register(request):
@@ -41,7 +46,7 @@ def register(request):
             else:
                 userPassword = make_password(password, None, 'pbkdf2_sha256')
                 # userName = username
-                data_dict = {'username': username, 'password': userPassword}
+                data_dict = {'name': username, 'password': userPassword}
 
                 serializer = EnterpriseSerializer(data=data_dict)
                 serializer.is_valid(raise_exception=True)
@@ -66,7 +71,7 @@ def register(request):
             else:
                 userPassword = make_password(password, None, 'pbkdf2_sha256')
                 # userName = username
-                data_dict = {'username': username, 'password': userPassword}
+                data_dict = {'name': username, 'password': userPassword}
 
                 serializer = FarmersSerializer(data=data_dict)
                 serializer.is_valid(raise_exception=True)
@@ -134,14 +139,42 @@ def change_password(request): #修改密码 --登录时
 def ent_info_post(request):  # 企业信息提交
     """
     POST
-    :param request: 企业各资质信息图片、企业名称等信息
+    :param request: 企业id，企业各资质信息图片、企业名称等信息
     :return: 成功/失败
     """
+
+    enterid = "1"
+    #form = InfoForm(request.POST, request.FILES)
+    print(request.body)
+
+    images = request.FILES
+    print(images)
+
+    enter = Enterprise.objects.get(id=enterid)
+    enter.icon = images['icon']
+    enter.save();
+
+    return HttpResponse("success")
+
+
+    # print(request.body)
+    # req = json.loads(request.body)
+    # enterid = req['id']
+    # images = request.FILES
+    # icon = images['icon']
+    # enter = Enterprise.objects.get(id=enterid)
+    #
+    # enter.icon = icon
+    # enter.save()
+
+
+
+    # 数据库新增信息
 
     # 将各信息存入数据库 序列化save
     # 状态设为待审核
 
-    mydict = {'msg': ''}
+    mydict = {'msg': 'success'}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 def ent_info_get(request):  # 企业信息获取（企业资料、审核结果）
@@ -154,8 +187,13 @@ def ent_info_get(request):  # 企业信息获取（企业资料、审核结果�
 
     # 根据企业id获取企业信息序列化
 
-    mydict = {'msg': ''}
-    return HttpResponse(json.dumps(mydict), content_type="application/json")
+    enterid = "1"
+    enter = Enterprise.objects.get(id=enterid)
+    img = enter.icon
+    print(img)
+    #mydict = {'msg': ''}
+    #return HttpResponse(json.dumps(mydict), content_type="application/json")
+    return render(request,'show.html',{'icon':img})
 
 
 def farmer_info_get(request):  # 包工头信息获取(查看自己的个人资料)

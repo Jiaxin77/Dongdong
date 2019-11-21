@@ -28,6 +28,9 @@ class Enterprise(models.Model):
     enterName = models.CharField(max_length=500, null=True, verbose_name="企业名称")
     enterDes = models.CharField(max_length=1000, null=True,verbose_name="企业简介")
 
+    icon = models.ImageField(upload_to='head',null=True)
+
+
     # 这部分必须的 default=1？否则default=0？  【必须和非必须怎么表示？】
     # 头像
     # 营业执照

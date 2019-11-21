@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>文件上传页</title>
+</head>
+<body>
+
+{#enctype="multipart/form-data"文件编码方式，必须设置，否则文件无法上传#}
+<form action="/user/entInfoPost" method="post" enctype="multipart/form-data">
+
+    <input type="number" name="id">
+    <input type="file" name="icon">
+    <input type="submit" value="提交">
+</form>
+
+</body>
+</html>
