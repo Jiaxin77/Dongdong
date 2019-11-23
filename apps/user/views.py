@@ -33,7 +33,7 @@ def register(request):
         password = req['password']
         status = req['user_type']  ## web or mini
 
-        if status == "web" :  # 来自web端的数据  ——————企业
+        if status == "ent" :  # 来自web端的数据  ——————企业
 
             if Enterprise.objects.filter(name=username):  # 已存在
                 messages.error(request, "用户名已存在")
@@ -59,7 +59,7 @@ def register(request):
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
                 # return HttpResponse(serializer.data, content_type="application/json")
                 # return render(request,'login.html',{'msg':'注册成功'}
-        if status == "mini": #  小程序端民工
+        if status == "far": #  小程序端民工
             if Farmers.objects.filter(name=username):  # 已存在
                 messages.error(request, "用户名已存在")
                 msg = "用户名已存在"
@@ -101,7 +101,7 @@ def login(request):  # 登录
         username = req['username']
         password = req['password']
         status = req['user_type']
-        if status == 'web':
+        if status == 'ent':
             thisUser = Enterprise.objects.filter(name=username)
             if thisUser.exists():
                 for user in thisUser:
@@ -249,6 +249,14 @@ def get_auth_enterprise(request):#  获取企业审核列表-管理员用
 
     mydict = {'msg': ''}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
+
+
+def get_enter_auth_info(request): #  获取审核某个企业-管理员用 （提供下载功能）
+    """
+    GET
+    :param request: 企业id
+    :return: 企业信息
+    """
 
 
 def post_auth_result(request): #  提交审核结果-管理员用

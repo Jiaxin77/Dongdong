@@ -22,7 +22,7 @@ def cacel_orders(): #取消订单
 
 def cancel_farmer_order(request): #企业取消某包工头订单
     """
-
+    POST
     :param request: 需求ID、包工头id（或直接给订单ID？）
     :return: 成功/失败
 
@@ -32,7 +32,7 @@ def cancel_farmer_order(request): #企业取消某包工头订单
 
 def get_orders(request):  # 获取需求对应订单
     """
-
+    GET
     :param request: 需求id
     :return: 订单列表
     """
@@ -43,7 +43,7 @@ def get_orders(request):  # 获取需求对应订单
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
-def get_all_orders(request): # 获取总金额
+def get_all_money(request): # 获取总金额
     """
 
     :param request: 企业id
@@ -55,4 +55,17 @@ def get_all_orders(request): # 获取总金额
     mydict = {'msg': ''}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
+def get_all_orders(request): # 获取总订单 -- 管理员用
+    """
+    GET
+    :param request: none
+    :return: 所有订单简要序列化信息
 
+    """
+
+def get_order_info(request): # 根据某订单id获取某订单信息 -- 管理员用
+    """
+    GET
+    :param request: 订单id
+    :return: 某订单序列化信息
+    """

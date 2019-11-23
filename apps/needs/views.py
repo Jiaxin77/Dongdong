@@ -31,6 +31,12 @@ def get_needs(request): #  企业查看需求列表
     mydict = {'msg': ''}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
+def get_need_info(request): #  企业查看具体某需求信息
+    """
+
+    :param request: 需求id
+    :return: 需求信息们
+    """
 
 def deal_needs(request):#  包工头接受/拒绝需求
     """
