@@ -26,7 +26,8 @@ class Enterprise(models.Model):
     authState = models.IntegerField(choices=enterState,default=-1,verbose_name="审核状态")
     authAdvice = models.CharField(max_length=2000,null=True,verbose_name="审核意见")
     enterName = models.CharField(max_length=500, null=True, verbose_name="企业名称")
-    enterDes = models.CharField(max_length=1000, null=True,verbose_name="企业简介")
+    enterDes = models.CharField(max_length=1000, null=True, verbose_name="企业简介")
+    scope = models.CharField(max_length=1000, null=True, verbose_name="经营范围")
 
     icon = models.ImageField(upload_to='head',null=True)
 

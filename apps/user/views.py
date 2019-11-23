@@ -222,6 +222,20 @@ def farmer_info_post(request):  # 包工头信息提交
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
+def register_manager(request):
+    """
+    POST
+    :param request: 管理员用户名、密码
+    :return: 成功/失败 —— 当前管理员列表？
+    """
+
+def all_manager(request):
+    """
+    GET
+    :param request:
+    :return: 管理员用户列表（id、用户名）
+    """
+
 
 def get_auth_enterprise(request):#  获取企业审核列表-管理员用
     """

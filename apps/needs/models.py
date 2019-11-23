@@ -8,8 +8,8 @@ needType = (
     (-1, '未设置'),
     (1, '编辑中'),
     (2, '匹配中'),
-    (3, '匹配完成待交易'),  # 匹配完成未支付（未到开工时间或是在工作中）
-    (4, '交易失败')
+    (3, '匹配完成待支付'),  # 匹配完成未支付（未到开工时间或是在工作中）
+    (4, '匹配失败')
 )
 
 
@@ -19,13 +19,16 @@ class Needs(models.Model):
     needsDes = models.CharField(max_length=500, null=True, verbose_name="需求描述")
     needsFarmerType = models.IntegerField(choices=user.models.farmerType,null=True,verbose_name="所需工种")
     needsNum = models.IntegerField(default=0,verbose_name="所需工种人员数")
+    nowNum = models.IntegerField(default=0, verbose_name="目前人数")
     # matchResult = models.CharField(max_length=1000, null=True, verbose_name="匹配结果")
     matchResult = models.ManyToManyField("user.Farmers",verbose_name="匹配结果人员")  # 包工头
     price = models.IntegerField(default=-1, verbose_name="工资")
+    needsTime = models.DateTimeField(auto_now_add=True, verbose_name="需求创建时间")
     #needsTime = models.CharField(max_length=500, null=True, verbose_name="开工时间")  # 时间
-    needsTime = models.DateTimeField(null=True,verbose_name="开工时间") #开工时间 --时间的匹配？
+    needsBeginTime = models.DateTimeField(null=True, verbose_name="开工时间") #开工时间 --时间的匹配？
     needsLocation = models.CharField(max_length=1000, null=True, verbose_name="工地")  # 地点
-    needsDayNum = models.IntegerField(default=0,verbose_name="工期")
-    remarks = models.CharField(max_length=2000,null=True,verbose_name="备注")
+    #needsDayNum = models.IntegerField(default=0,verbose_name="工期")
+    needsEndTime = models.DateTimeField(null=True, verbose_name="截止时间")
+    remarks = models.CharField(max_length=2000, null=True,verbose_name="备注")
     needsType = models.IntegerField(choices=needType, default=-1, verbose_name="需求状态")
 
