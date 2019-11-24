@@ -38,7 +38,7 @@ def register(request):
             if Enterprise.objects.filter(name=username):  # 已存在
                 messages.error(request, "用户名已存在")
                 msg = "用户名已存在"
-                mydict = {'msg': msg}
+                mydict = {'result': 'false','msg': msg}
                 # return render(request,'login.html',{'msg':'用户名已存在'})
                 print("用户名已存在")
                 # return render(request,"register",{'data':json.dumps(mydict)})
@@ -53,7 +53,7 @@ def register(request):
                 serializer.save()  # 数据库新增信息
                 # messages.success(request, "注册成功")
                 msg = "注册成功"
-                mydict = {'msg': msg}
+                mydict = {'result': 'true','msg': msg}
                 print("注册成功")
                 # return render(request,"register",{'data': json.dumps(mydict)})
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
@@ -109,16 +109,17 @@ def login(request):  # 登录
                     if ret:
                         serializer = EnterpriseSerializer(user)
                         msg = "登录成功"
-                        return HttpResponse(json.dumps(serializer.data))
+                        mydict = {'result': 'true', 'msg': msg, 'user': serializer.data}
+                        return HttpResponse(json.dumps(mydict), content_type="application/json")
                         # return render(request,'login.html',json.dumps(mydict))
                     else:
                         msg = "密码错误，登录失败"
-                        mydict = {'msg': msg}
+                        mydict = {'result': 'false', 'msg': msg, 'user': '-1'}  # 前端不读user
                         return HttpResponse(json.dumps(mydict), content_type="application/json")
                         # return render(request,'login.html',json.dumps(mydict))
             else:
                 msg = "用户名不存在"
-                mydict = {'msg': msg}
+                mydict = {'result': 'false', 'msg': msg, 'user': '-1'}  # 前端不读user
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
                 # return render(request,'login.html',json.dumps(mydict))
 
