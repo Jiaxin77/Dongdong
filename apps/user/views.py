@@ -3,11 +3,11 @@ from django.shortcuts import render
 
 # Create your views here.
 import json
-from user.models import Enterprise, Farmers
+from user.models import Enterprise, Farmers, Administrator
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 
-from user.serializer import EnterpriseSerializer, FarmersSerializer
+from user.serializer import EnterpriseSerializer, FarmersSerializer, AdministratorSerializer
 #from user.forms import InfoForm
 import logging as log
 
@@ -23,8 +23,6 @@ def register(request):
     :return:注册成功or失败
     """
     print(request.body)
-    #print(aaa)
-    log.info(request.body)
     if request.method == "POST":
         print(request.body)
         req = json.loads(request.body)
@@ -229,6 +227,36 @@ def register_manager(request):
     :param request: 管理员用户名、密码
     :return: 成功/失败 —— 当前管理员列表？
     """
+    if request.method == "POST":
+        print(request.body)
+        req = json.loads(request.body)
+        print(req)
+        username = req['username']
+        password = req['password']
+        if Administrator.objects.filter(name=username):  # 已存在
+                messages.error(request, "用户名已存在")
+                msg = "用户名已存在"
+                mydict = {'result': 'false','msg': msg}
+                # return render(request,'login.html',{'msg':'用户名已存在'})
+                print("用户名已存在")
+                # return render(request,"register",{'data':json.dumps(mydict)})
+                return HttpResponse(json.dumps(mydict), content_type="application/json")
+
+        else:
+                userPassword = make_password(password, None, 'pbkdf2_sha256')
+                # userName = username
+                data_dict = {'name': username, 'password': userPassword}
+
+                serializer = AdministratorSerializer(data=data_dict)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()  # 数据库新增信息
+                # messages.success(request, "注册成功")
+                msg = "注册成功"
+                mydict = {'result': 'true','msg': msg}
+                print("注册成功")
+                # return render(request,"register",{'data': json.dumps(mydict)})
+                return HttpResponse(json.dumps(mydict), content_type="application/json")
+                # return render(request,'login.html',{'msg':'注册成功'}
 
 def all_manager(request):
     """

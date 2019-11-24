@@ -75,9 +75,6 @@ class FarmersMember(models.Model):
     group = models.ForeignKey("user.Farmers", on_delete=models.CASCADE,null=True)  # 所在组
 
 
-
-
-
 # 管理员库
 class Administrator(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="管理员ID")

@@ -1,6 +1,6 @@
 from rest_framework import  serializers
 
-from user.models import Enterprise, Farmers, FarmersMember
+from user.models import Enterprise, Farmers, FarmersMember, Administrator
 
 
 class EnterpriseSerializer(serializers.ModelSerializer):
@@ -21,7 +21,10 @@ class FarmersMemberSerializer(serializers.ModelSerializer):
         model = FarmersMember
         field = "__all__"
 
-
+class AdministratorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Administrator
+        exclude = ('password',)
 # class EnterpriseSerializer(serializers.Serializer):
 #     name = serializers.CharField()
 #     enterName = serializers.CharField(default="000")
