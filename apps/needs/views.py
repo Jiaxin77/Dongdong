@@ -1,8 +1,12 @@
+from django.contrib.messages import SUCCESS
 from django.http import HttpResponse
 from django.shortcuts import render
 import json
 
 # Create your views here.
+from needs.models import Needs, needType
+from needs.serializer import NeedsSerializer
+from user.models import Enterprise, farmerType, Foreman, Farmers
 
 
 def post_needs(request):  # 企业发布需求
@@ -11,13 +15,37 @@ def post_needs(request):  # 企业发布需求
     :param request: 企业id、需求信息们
     :return: 成功/失败
     """
-
+    
     # 需求序列化信息存储
     # （暂时不用的匹配）
+    print(request.body)
+    req = json.loads(request.body)
+    print(req)
+    enterid = req['id']
+    needsDes = req['needsDes']
+    needsFarmerType = req['needsFarmerType']
+    needsNum = req['needsNum']
+    price = req['price']
+    needsBeginTime = req['needsBeginTime']
+    needsLocation = req['needsLocation']
+    needsEndTime = req['needsEndTime']
+    remarks = req['remarks']
+    enter = Enterprise.objects.get(id = enterid)
+
+    data_dict = {"enterId":enter.id,"needsDes":needsDes,"needsFarmerType":needsFarmerType,
+                 'needsNum':needsNum, 'price': price,'needsBeginTime':needsBeginTime,'needsLocation':needsLocation,'needsEndTime':needsEndTime,'remarks':remarks,'needsType':2 }
+
+    serializer = NeedsSerializer(data=data_dict)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()  # 数据库新增信息
+
+    # 分配需求
 
 
-    mydict = {'msg': ''}
+
+    mydict = {'result':SUCCESS,'msg': '需求发布成功！'}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
+
 
 
 def get_needs(request): #  企业查看需求列表
@@ -28,7 +56,18 @@ def get_needs(request): #  企业查看需求列表
     """
 
     #根据企业id获取
-    mydict = {'msg': ''}
+
+    req = json.loads(request.body)
+    enterid = req['id']
+    enter = Enterprise.objects.get(id=enterid)
+    allneeds =  Needs.objects.all()
+    needList = []
+    for need in allneeds:
+        if need.enterId == enter: #  获取属于该企业的
+            serializer = NeedsSerializer(need)
+            needList.append(serializer.data)
+
+    mydict = {'result':SUCCESS,'msg': '获取成功','data':{'enterid':enterid,'needList':needList}}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 def get_need_info(request): #  企业查看具体某需求信息
@@ -37,6 +76,39 @@ def get_need_info(request): #  企业查看具体某需求信息
     :param request: 需求id
     :return: 需求信息们
     """
+
+    req = json.loads(request.body)
+    needid = req['id']
+    need = Needs.objects.get(id = needid)
+    serializer = NeedsSerializer(need)
+    mydict = {'result':SUCCESS,'msg': '获取成功', 'data': serializer.data}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
+
+
+def get_self_needs(request): # 农民工获取待接受需求
+    """
+
+    :param request: 农民工id
+    :return: 需求列表
+    """
+    req = json.loads(request.body)
+    farid = req['id']
+    foreman = Foreman.objects.get(id = farid)
+    allfarmers = Farmers.objects.all()
+    farmerTypeList = []
+    for farmers in allfarmers:
+        farmerTypeList.append(farmers.type)
+    allneeds = Needs.objects.all()
+    needsList = []
+    for need in allneeds:
+        if need.needsType == 2:
+            if need.needsFarmerType in farmerTypeList:
+                serializer = NeedsSerializer(need)
+                needsList.append(serializer.data)
+
+    mydict = {'result': SUCCESS, 'msg': '获取成功', 'needsList': needsList}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
+
 
 def deal_needs(request):#  包工头接受/拒绝需求
     """

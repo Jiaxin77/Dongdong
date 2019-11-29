@@ -17,11 +17,12 @@ class Needs(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="需求ID")
     enterId = models.ForeignKey('user.Enterprise', on_delete=models.CASCADE, verbose_name="企业ID",null=True)
     needsDes = models.CharField(max_length=500, null=True, verbose_name="需求描述")
-    needsFarmerType = models.IntegerField(choices=user.models.farmerType,null=True,verbose_name="所需工种")
+    #needsFarmerType = models.IntegerField(choices=user.models.farmerType,null=True,verbose_name="所需工种")
+    needsFarmerType = models.CharField(max_length=2000,null=True,verbose_name="所需工种")
     needsNum = models.IntegerField(default=0,verbose_name="所需工种人员数")
     nowNum = models.IntegerField(default=0, verbose_name="目前人数")
     # matchResult = models.CharField(max_length=1000, null=True, verbose_name="匹配结果")
-    matchResult = models.ManyToManyField("user.Farmers",verbose_name="匹配结果人员")  # 包工头
+    matchResult = models.ManyToManyField("user.Farmers",verbose_name="匹配结果人员",null=True)  # 组
     price = models.IntegerField(default=-1, verbose_name="工资")
     needsTime = models.DateTimeField(auto_now_add=True, verbose_name="需求创建时间")
     #needsTime = models.CharField(max_length=500, null=True, verbose_name="开工时间")  # 时间

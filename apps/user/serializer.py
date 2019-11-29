@@ -1,6 +1,6 @@
 from rest_framework import  serializers
 
-from user.models import Enterprise, Farmers, FarmersMember, Administrator
+from user.models import Enterprise, Farmers, FarmersMember, Administrator, Foreman
 
 
 class EnterpriseSerializer(serializers.ModelSerializer):
@@ -9,10 +9,15 @@ class EnterpriseSerializer(serializers.ModelSerializer):
         exclude = ('password',)
 
 
+class ForemanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Foreman
+        exclude = ('password','openid',)
+
 class FarmersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Farmers
-        exclude = ('password',)
+        field = "__all__"
 
 
 

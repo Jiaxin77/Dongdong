@@ -12,7 +12,7 @@ class Order(models.Model):
     )
     id = models.CharField(max_length=200,primary_key=True,default="000",verbose_name="订单流水号")
 #   entid = models.ForeignKey("user.Enterprise",on_delete=models.CASCADE,verbose_name="此订单所属企业") --从所属需求中读取
-    farmers = models.ManyToManyField("user.Farmers",verbose_name="包工头")  # 包工头
+    farmers = models.ManyToManyField("user.Farmers",verbose_name="组")  # 组
     money = models.IntegerField(default=0,verbose_name="总交易金额") #交易金额
     moneyToFarmers = models.IntegerField(default=0, verbose_name="给农工金额")
     moneyToApp = models.IntegerField(default=0, verbose_name="给软件金额")

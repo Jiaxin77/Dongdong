@@ -48,16 +48,23 @@ class Enterprise(models.Model):
 
 
 
-
-
-# 包工头库
-class Farmers(models.Model):
+#包工头
+class Foreman(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="包工头ID")
     name = models.CharField(max_length=100, verbose_name="包工头用户名")
-    password = models.CharField(max_length=5000, verbose_name="农民工密码")
+    password = models.CharField(max_length=5000, verbose_name="包工头密码")
+    openid = models.CharField(max_length=5000, default="null", verbose_name="小程序openid")
     IDCard = models.CharField(max_length=100, null=True, verbose_name="包工头身份证号")
-    type = models.IntegerField(choices=farmerType, default=-1, verbose_name="工种")  # 民工种类
+    phonenumber = models.CharField(max_length=100,null=True, verbose_name="手机号")
+
+# 工种+班级号
+class Farmers(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name="组ID")
+    classNumber = models.IntegerField(default=-1, verbose_name="组号")
+    #type = models.IntegerField(choices=farmerType, default=-1, verbose_name="工种")  # 民工种类
+    type = models.CharField(max_length=2000, default="未设置", verbose_name="工种")
     memberNumber = models.IntegerField(default=1, verbose_name="小组人数")
+    leader = models.ForeignKey("Foreman",on_delete=models.SET_NULL, verbose_name="所属包工头",null=True)
     ingNeed = models.ForeignKey("needs.Needs", on_delete=models.SET_NULL, verbose_name="进行中需求",null=True)  # 正在做的需求
 
     #completedNeed = models.CharField(max_length=500, null=True, verbose_name="已完成需求")
@@ -65,14 +72,15 @@ class Farmers(models.Model):
     #completedNeed = models.ManyToManyField("needs.Needs") # 已完成的需求(多对多) --按组的话不需要，但是存在组内有人未完成吗
     #ingNeed = models.CharField(max_length=500, null=True, verbose_name="进行中需求")  # 正在做的需求 --按组的话不需要，但是存在组内有人未完成吗
 
-
 # 民工个人
 class FarmersMember(models.Model):
     id = models.AutoField(primary_key=True,verbose_name="农民工ID")
     name = models.CharField(max_length=100,verbose_name="农民工姓名")
     IDCard = models.CharField(max_length=100,verbose_name="农民工身份证号",unique=True)
     age = models.IntegerField(null=True,verbose_name="年龄")
-    group = models.ForeignKey("user.Farmers", on_delete=models.CASCADE,null=True)  # 所在组
+    group = models.ManyToManyField("user.Farmers", null=True)  # 所在组
+    authInfo = models.ImageField(upload_to='farmerAuth',null=True)
+
 
 
 # 管理员库
