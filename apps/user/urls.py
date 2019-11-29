@@ -13,6 +13,7 @@ urlpatterns = [
     path('entInfoGet',views.ent_info_get,name = "ent_info_get"),
     path('changePassword',views.change_password,name = "change_password"),
     path('foremanAddGroup',views.foreman_add_group,name = "foreman_add_group"),
+    path('foremanShowGroup',views.forman_show_group,name = "foreman_show_group"),
     path('foremanInfoPost',views.foreman_info_post,name = "forman_info_post"),
     path('foremanInfoGet',views.foreman_info_get,name = "forman_info_get")
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

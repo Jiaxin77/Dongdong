@@ -14,17 +14,17 @@ class ForemanSerializer(serializers.ModelSerializer):
         model = Foreman
         exclude = ('password','openid',)
 
+
 class FarmersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Farmers
-        field = "__all__"
-
+        fields = "__all__"
 
 
 class FarmersMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = FarmersMember
-        field = "__all__"
+        fields = "__all__"
 
 class AdministratorSerializer(serializers.ModelSerializer):
     class Meta:

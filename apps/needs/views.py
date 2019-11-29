@@ -22,18 +22,21 @@ def post_needs(request):  # 企业发布需求
     req = json.loads(request.body)
     print(req)
     enterid = req['id']
-    needsDes = req['needsDes']
-    needsFarmerType = req['needsFarmerType']
-    needsNum = req['needsNum']
-    price = req['price']
-    needsBeginTime = req['needsBeginTime']
-    needsLocation = req['needsLocation']
-    needsEndTime = req['needsEndTime']
-    remarks = req['remarks']
+    req_form = req['values']
+    #needsDes = req_form['needsDes']
+    needsFarmerType = req_form['needsFarmerType']
+    needsNum = req_form['needsNum']
+    price = req_form['price']
+    needsBeginTime = req_form['buildTime'][0]
+
+    needsLocation = req_form['province']+req_form['centre']+req_form['local']
+    needsEndTime = req_form['buildTime'][1]
+
+    #remarks = req_form['remarks']
     enter = Enterprise.objects.get(id = enterid)
 
-    data_dict = {"enterId":enter.id,"needsDes":needsDes,"needsFarmerType":needsFarmerType,
-                 'needsNum':needsNum, 'price': price,'needsBeginTime':needsBeginTime,'needsLocation':needsLocation,'needsEndTime':needsEndTime,'remarks':remarks,'needsType':2 }
+    data_dict = {"enterId":enter.id,"needsFarmerType":needsFarmerType,
+                 'needsNum':needsNum, 'price': price,'needsBeginTime':needsBeginTime,'needsLocation':needsLocation,'needsEndTime':needsEndTime,'needsType':2 }###删掉了remarks，des
 
     serializer = NeedsSerializer(data=data_dict)
     serializer.is_valid(raise_exception=True)
@@ -87,14 +90,15 @@ def get_need_info(request): #  企业查看具体某需求信息
 
 def get_self_needs(request): # 农民工获取待接受需求
     """
-
+    GET
     :param request: 农民工id
     :return: 需求列表
     """
-    req = json.loads(request.body)
-    farid = req['id']
+
+    farid = request.GET.get('id')
     foreman = Foreman.objects.get(id = farid)
-    allfarmers = Farmers.objects.all()
+
+    allfarmers = Farmers.objects.filter(leader=foreman)#属于此包工头的小组
     farmerTypeList = []
     for farmers in allfarmers:
         farmerTypeList.append(farmers.type)

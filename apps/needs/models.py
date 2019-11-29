@@ -1,5 +1,5 @@
 from django.db import models
-import user.models
+
 
 # Create your models here.
 
@@ -21,7 +21,7 @@ class Needs(models.Model):
     needsFarmerType = models.CharField(max_length=2000,null=True,verbose_name="所需工种")
     needsNum = models.IntegerField(default=0,verbose_name="所需工种人员数")
     nowNum = models.IntegerField(default=0, verbose_name="目前人数")
-    # matchResult = models.CharField(max_length=1000, null=True, verbose_name="匹配结果")
+    #matchResult = models.CharField(max_length=1000, null=True, verbose_name="匹配结果")
     matchResult = models.ManyToManyField("user.Farmers",verbose_name="匹配结果人员",null=True)  # 组
     price = models.IntegerField(default=-1, verbose_name="工资")
     needsTime = models.DateTimeField(auto_now_add=True, verbose_name="需求创建时间")

@@ -300,13 +300,19 @@ def ent_info_get(request):  # 企业信息获取（企业资料、审核结果�
 
     # 根据企业id获取企业信息序列化
 
-    enterid = "1"
+    enterid = request.GET.get('id') ####get用！
+
+    #enterid = "1"
     enter = Enterprise.objects.get(id=enterid)
-    img = enter.icon
-    print(img)
-    #mydict = {'msg': ''}
-    #return HttpResponse(json.dumps(mydict), content_type="application/json")
-    return render(request,'show.html',{'icon':img})
+    #img = enter.icon
+    #print(img)
+    data = [
+        {"id":1},
+        {"id":2}
+    ]
+    mydict = {'msg': 'success','result':data}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
+    #return render(request,'show.html',{'icon':img})
 
 
 def foreman_info_get(request):  # 包工头信息获取(查看自己的个人资料)
@@ -342,9 +348,11 @@ def foreman_info_post(request):  # 包工头信息提交
 
     name = req['name']
     IDCard = req['idcard']
+    phonenumber = req['phonenumber']
     foreman = Foreman.objects.get(id=id)
     foreman.name = name
     foreman.IDCard = IDCard
+    foreman.phonenumber = phonenumber
     foreman.save()
     mydict = {'result':SUCCESS,'msg':"提交成功！"}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
@@ -352,10 +360,11 @@ def foreman_info_post(request):  # 包工头信息提交
 
 def foreman_add_group(request): #包工头添加小组
     """
-
+    #POST
     :param request: 包工头id、小组信息
     :return: 成功/失败
     """
+    print(request.body)
     req = json.loads(request.body)
     id = req['id'] #包工头id
     type = req['type']
@@ -370,14 +379,27 @@ def foreman_add_group(request): #包工头添加小组
     mydict = {'result':SUCCESS,'msg': '添加成功','data':data}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
+def forman_show_group(request): #包工头展示小组
 
+    """
+    GET
+    :param request: 包工头id
+    :return: 小组列表
+    """
+    forid = request.GET.get('id')
+    foreman = Foreman.objects.get(id=forid)
+    groups = Farmers.objects.filter(leader=foreman) #leader为该包工头的
+    group_ser = FarmersSerializer(groups,many=True) #序列化
 
+    # 名称组合
+    group_list = []
+    for group in groups:
+        name = group.type + str(group.classNumber)
+        one_group = {"id": group.id, "name": name, "memberNumber": group.memberNumber}
+        group_list.append(one_group)
 
-
-
-
-
-
+    mydict = {'result': SUCCESS, 'msg': '获取成功','data':group_list}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
 
