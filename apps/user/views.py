@@ -414,12 +414,18 @@ def group_add_member(request): #添加组员
     :param request: 组的id，组员list（身份证、姓名）
     :return:是否成功
     """
+
     req = json.loads(request.body)
+    print(req)
     id = req['id']  # 组号
     farmer =Farmers.objects.get(id=id)
     name = req['name']
     phonenumber = req['phonenumber']
     idcard = req['idcard']
+    # images = request.FILES
+    # auth = images['auth']
+
+    #, authInfo = auth
     FarmersMember.objects.create(name=name, phoneNumber=phonenumber, IDCard=idcard, group=farmer)
     farmer.memberNumber = farmer.memberNumber+1
     farmer.authState = "审核中"

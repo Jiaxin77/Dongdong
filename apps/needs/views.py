@@ -208,6 +208,7 @@ def auto_begin_needs():#  自动开始需求（根据系统时间）
                     need.save()
                 else: #未匹配成功
                     need.needsType = "匹配失败"
+
                     need.save()
 
         except Exception as e:
@@ -245,8 +246,8 @@ def auto_cancel_needs():# 系统自动取消需求（到开工时间未招齐）
     # 置农民工正在需求状态
 
 
-def auto_time(): #  时间定期检测
-    """
-    时间检测，每过一天检测一次。需求开工or取消
-    :return:
-    """
+# def auto_time(): #  时间定期检测
+#     """
+#     时间检测，每过一天检测一次。需求开工or取消
+#     :return:
+#     """
