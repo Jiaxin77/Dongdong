@@ -24,12 +24,12 @@ class Needs(models.Model):
     #matchResult = models.CharField(max_length=1000, null=True, verbose_name="匹配结果")
     matchResult = models.ManyToManyField("user.Farmers",verbose_name="匹配结果人员",null=True)  # 组
     price = models.IntegerField(default=-1, verbose_name="工资")
-    needsTime = models.DateTimeField(auto_now_add=True, verbose_name="需求创建时间")
+    needsTime = models.DateField(auto_now_add=True, verbose_name="需求创建时间")
     #needsTime = models.CharField(max_length=500, null=True, verbose_name="开工时间")  # 时间
-    needsBeginTime = models.DateTimeField(null=True, verbose_name="开工时间") #开工时间 --时间的匹配？
+    needsBeginTime = models.DateField(null=True, verbose_name="开工时间") #开工时间 --时间的匹配？
     needsLocation = models.CharField(max_length=1000, null=True, verbose_name="工地")  # 地点
     #needsDayNum = models.IntegerField(default=0,verbose_name="工期")
-    needsEndTime = models.DateTimeField(null=True, verbose_name="截止时间")
+    needsEndTime = models.DateField(null=True, verbose_name="截止时间")
     remarks = models.CharField(max_length=2000, null=True,verbose_name="备注")
-    needsType = models.IntegerField(choices=needType, default=-1, verbose_name="需求状态")
+    needsType = models.CharField(max_length=200,default="未设置", verbose_name="需求状态")
 

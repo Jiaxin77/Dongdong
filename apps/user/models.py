@@ -23,7 +23,8 @@ class Enterprise(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="企业ID")
     name = models.CharField(max_length=100, verbose_name="企业用户名")
     password = models.CharField(max_length=5000, verbose_name="企业密码")
-    authState = models.IntegerField(choices=enterState,default=-1,verbose_name="审核状态")
+    authState = models.CharField(max_length=200, default= "未提交",verbose_name="审核状态")
+    #authState = models.IntegerField(choices=enterState,default=-1,verbose_name="审核状态")
     authAdvice = models.CharField(max_length=2000,null=True,verbose_name="审核意见")
     enterName = models.CharField(max_length=500, null=True, verbose_name="企业名称")
     enterDes = models.CharField(max_length=1000, null=True, verbose_name="企业简介")
@@ -56,6 +57,8 @@ class Foreman(models.Model):
     openid = models.CharField(max_length=5000, default="null", verbose_name="小程序openid")
     IDCard = models.CharField(max_length=100, null=True, verbose_name="包工头身份证号")
     phonenumber = models.CharField(max_length=100,null=True, verbose_name="手机号")
+    Bank = models.CharField(max_length=100,null=True,verbose_name="银行")
+    BankNumber = models.CharField(max_length=1000,null=True,verbose_name="银行卡号")
 
 # 工种+班级号
 class Farmers(models.Model):
@@ -66,7 +69,7 @@ class Farmers(models.Model):
     memberNumber = models.IntegerField(default=1, verbose_name="小组人数")
     leader = models.ForeignKey("Foreman",on_delete=models.SET_NULL, verbose_name="所属包工头",null=True)
     ingNeed = models.ForeignKey("needs.Needs", on_delete=models.SET_NULL, verbose_name="进行中需求",null=True)  # 正在做的需求
-
+    authState = models.CharField(max_length=2000,default="审核中",verbose_name="审核状态") #审核未通过、审核中、审核已通过
     #completedNeed = models.CharField(max_length=500, null=True, verbose_name="已完成需求")
 
     #completedNeed = models.ManyToManyField("needs.Needs") # 已完成的需求(多对多) --按组的话不需要，但是存在组内有人未完成吗
@@ -76,10 +79,12 @@ class Farmers(models.Model):
 class FarmersMember(models.Model):
     id = models.AutoField(primary_key=True,verbose_name="农民工ID")
     name = models.CharField(max_length=100,verbose_name="农民工姓名")
-    IDCard = models.CharField(max_length=100,verbose_name="农民工身份证号",unique=True)
-    age = models.IntegerField(null=True,verbose_name="年龄")
-    group = models.ManyToManyField("user.Farmers", null=True)  # 所在组
-    authInfo = models.ImageField(upload_to='farmerAuth',null=True)
+    IDCard = models.CharField(max_length=100,verbose_name="农民工身份证号")
+    phoneNumber = models.CharField(max_length=100,verbose_name="手机号",null=True)
+    #age = models.IntegerField(null=True,verbose_name="年龄")
+    group = models.ForeignKey("user.Farmers", null=True,on_delete=models.SET_NULL)  # 所在组
+    authInfo = models.ImageField(upload_to='farmerAuth',null=True)#资质照片
+
 
 
 

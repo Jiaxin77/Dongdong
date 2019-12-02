@@ -4,3 +4,5 @@ pymysql=0.9.3
 rest_framework
 Pillow=6.2.1
 requests=2.22.0
+datetime =4.3
+apscheduler=3.6.3

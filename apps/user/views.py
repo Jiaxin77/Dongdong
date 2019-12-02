@@ -9,11 +9,12 @@ import json
 
 from rest_framework.views import APIView
 
-from user.models import Enterprise, Farmers, Administrator, Foreman
+from user.models import Enterprise, Farmers, Administrator, Foreman, FarmersMember
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 
-from user.serializer import EnterpriseSerializer, FarmersSerializer, AdministratorSerializer, ForemanSerializer
+from user.serializer import EnterpriseSerializer, FarmersSerializer, AdministratorSerializer, ForemanSerializer, \
+    FarmersMemberSerializer
 #from user.forms import InfoForm
 import logging as log
 
@@ -342,17 +343,21 @@ def foreman_info_post(request):  # 包工头信息提交
     :return: 成功/失败
     """
     # 包工头信息序列化save
-
+    print(request.body)
     req=json.loads(request.body)
     id=req['id']
 
-    name = req['name']
+    #name = req['name']
     IDCard = req['idcard']
     phonenumber = req['phonenumber']
+    bank=req['bank']
+    banknumber = req['banknumber']
     foreman = Foreman.objects.get(id=id)
-    foreman.name = name
+    #foreman.name = name
     foreman.IDCard = IDCard
     foreman.phonenumber = phonenumber
+    foreman.Bank = bank
+    foreman.BankNumber = banknumber
     foreman.save()
     mydict = {'result':SUCCESS,'msg':"提交成功！"}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
@@ -403,7 +408,36 @@ def forman_show_group(request): #包工头展示小组
 
 
 
+def group_add_member(request): #添加组员
+    """
+    POST
+    :param request: 组的id，组员list（身份证、姓名）
+    :return:是否成功
+    """
+    req = json.loads(request.body)
+    id = req['id']  # 组号
+    farmer =Farmers.objects.get(id=id)
+    name = req['name']
+    phonenumber = req['phonenumber']
+    idcard = req['idcard']
+    FarmersMember.objects.create(name=name, phoneNumber=phonenumber, IDCard=idcard, group=farmer)
+    farmer.memberNumber = farmer.memberNumber+1
+    farmer.authState = "审核中"
+    mydict = {'result': SUCCESS, 'msg': '添加成功'}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
 
+def group_show_member(request):#展示该组成员
+    """
+    GET
+    :param request: 组的id
+    :return: 成员列表
+    """
+    id = request.GET.get('id') #组号
+    farmer = Farmers.objects.get(id=id)
+    members = FarmersMember.objects.filter(group=farmer)
+    members_ser =FarmersMemberSerializer(members, many=True)
+    mydict = {'result': SUCCESS, 'msg': '获取成功', 'data': members_ser.data}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
 def register_manager(request):
@@ -432,9 +466,11 @@ def register_manager(request):
                 # userName = username
                 data_dict = {'name': username, 'password': userPassword}
 
-                serializer = AdministratorSerializer(data=data_dict)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()  # 数据库新增信息
+                Administrator.objects.create(name=username,password=password)
+
+                # serializer = AdministratorSerializer(data=data_dict)
+                # serializer.is_valid(raise_exception=True)
+                # serializer.save()  # 数据库新增信息
                 # messages.success(request, "注册成功")
                 msg = "注册成功"
                 mydict = {'result': 'true','msg': msg}
@@ -449,6 +485,11 @@ def all_manager(request):
     :param request:
     :return: 管理员用户列表（id、用户名）
     """
+    adminList = Administrator.objects.all()
+    admin_ser = AdministratorSerializer(adminList, many=True)
+    mydict = {'result': SUCCESS, 'msg': '获取成功', 'data': admin_ser.data}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
+
 
 
 def get_auth_enterprise(request):#  获取企业审核列表-管理员用
@@ -460,8 +501,9 @@ def get_auth_enterprise(request):#  获取企业审核列表-管理员用
 
     # 获取所有企业列表和审核状态
     # （前端首先显示待审核企业）
-
-    mydict = {'msg': ''}
+    enterList = Enterprise.objects.all()
+    enter_ser = EnterpriseSerializer(enterList,many=True)
+    mydict = {'result': SUCCESS, 'msg': '获取成功', 'data': enter_ser.data}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
@@ -482,5 +524,14 @@ def post_auth_result(request): #  提交审核结果-管理员用
 
     # 置该企业审核字段
 
-    mydict = {'msg': ''}
+    req = json.loads(request.body)
+    id = req['id']
+    authState = req['authState']
+    authAdvice = req['authAdvice']
+    enter = Enterprise.objects.get(id=id)
+    enter.authState=authState
+    enter.authAdvice=authAdvice
+    enter.save()
+
+    mydict = {'result': SUCCESS, 'msg': '提交成功'}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
