@@ -6,6 +6,7 @@ from . import views
 app_name = 'user' #设置命名空间
 
 urlpatterns = [
+    path('test',views.test,name='test'),
     path('index',views.index,name = 'index'),
     path('register',views.register,name = 'register'),
     path('login',views.login,name = 'login'),
@@ -21,5 +22,6 @@ urlpatterns = [
     path('getAuthEnterprise',views.get_auth_enterprise, name = "get_auth_enterprise"),
     path('postAuthResult',views.post_auth_result,name = "post_auth_result"),
     path('groupAddMember',views.group_add_member,name = "group_add_member"),
-    path('groupShowMember',views.group_show_member, name = "group_show_member")
+    path('groupShowMember',views.group_show_member, name = "group_show_member"),
+    path('deleteManager',views.delete_manager,name = 'delete_manager')
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

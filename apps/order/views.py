@@ -1,9 +1,46 @@
 import json
+import random
 
 from django.http import HttpResponse
 from django.shortcuts import render
-
+import time
 # Create your views here.
+
+#金额分配比例
+#给app的
+price_to_app = 0.2
+
+
+# 订单id生成
+def create_order_id(needid,userid):
+    """
+
+    :return:
+    """
+    #print(time.localtime())
+    year = time.localtime().tm_year
+    month = time.localtime().tm_mon
+    day = time.localtime().tm_mday
+    hour = time.localtime().tm_hour
+    minute = time.localtime().tm_min
+    second = time.localtime().tm_sec
+
+    year_str = str(year).zfill(4)
+    month_str = str(month).zfill(2)
+    day_str = str(day).zfill(2)
+    hour_str = str(hour).zfill(2)
+    minute_str = str(minute).zfill(2)
+    second_str = str(second).zfill(2)
+
+    random_str = str(random.randint(0, 99)).zfill(2)
+    time_str = year_str+month_str+day_str+hour_str+minute_str+second_str
+    orderid = time_str+random_str+str(needid)+str(userid)
+    return orderid
+
+
+
+
+
 
 def save_orders(): #开工时产生订单
     """

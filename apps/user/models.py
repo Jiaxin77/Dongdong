@@ -66,7 +66,7 @@ class Farmers(models.Model):
     classNumber = models.IntegerField(default=-1, verbose_name="组号")
     #type = models.IntegerField(choices=farmerType, default=-1, verbose_name="工种")  # 民工种类
     type = models.CharField(max_length=2000, default="未设置", verbose_name="工种")
-    memberNumber = models.IntegerField(default=1, verbose_name="小组人数")
+    memberNumber = models.IntegerField(default=0, verbose_name="小组人数")
     leader = models.ForeignKey("Foreman",on_delete=models.SET_NULL, verbose_name="所属包工头",null=True)
     ingNeed = models.ForeignKey("needs.Needs", on_delete=models.SET_NULL, verbose_name="进行中需求",null=True)  # 正在做的需求
     authState = models.CharField(max_length=2000,default="审核中",verbose_name="审核状态") #审核未通过、审核中、审核已通过

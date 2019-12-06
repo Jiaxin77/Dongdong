@@ -22,9 +22,22 @@ URL = "https://api.weixin.qq.com/sns/jscode2session"
 APPID = "wx2e0f6900788aba6c"
 APPSECRET = "63a7faa02d7434f166b14cfe0dd75e92"
 
+def test(request):
+    req = json.loads(request.body)
+    id = req['id']
+    foreman = Foreman.objects.get(id=id)
+    fore_ser = ForemanSerializer(foreman)
+    mydict = {'msg': fore_ser.data}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
+
+
+
+
+
 def index(request):
     # return render(request,"index.html")
     return HttpResponse(json.dumps("hhh"), content_type="application/json")
+
 
 # 注册(企业1、农民工2)[小程序返回给哪里？]
 def register(request):
@@ -250,7 +263,7 @@ def change_password(request): #修改密码 --登录时
     mydict = {'msg': ''}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
-def ent_info_post(request):  # 企业信息提交
+def ent_info_post(request):  # 企业信息提交——要分资质提交和普通信息提交吗？
     """
     POST
     :param request: 企业id，企业各资质信息图片、企业名称等信息
@@ -347,17 +360,25 @@ def foreman_info_post(request):  # 包工头信息提交
     req=json.loads(request.body)
     id=req['id']
 
+    #file = json.loads(request.FILES)
     #name = req['name']
     IDCard = req['idcard']
     phonenumber = req['phonenumber']
     bank=req['bank']
     banknumber = req['banknumber']
+
+   # images = request.FILES
+   # icon = images['icon']
+
+
     foreman = Foreman.objects.get(id=id)
     #foreman.name = name
     foreman.IDCard = IDCard
     foreman.phonenumber = phonenumber
     foreman.Bank = bank
     foreman.BankNumber = banknumber
+
+    #foreman.
     foreman.save()
     mydict = {'result':SUCCESS,'msg':"提交成功！"}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
@@ -406,6 +427,12 @@ def forman_show_group(request): #包工头展示小组
     mydict = {'result': SUCCESS, 'msg': '获取成功','data':group_list}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
+def member_add_pic(request): #添加组员审核照片
+    """
+
+    :param request:
+    :return:
+    """
 
 
 def group_add_member(request): #添加组员
@@ -414,21 +441,40 @@ def group_add_member(request): #添加组员
     :param request: 组的id，组员list（身份证、姓名）
     :return:是否成功
     """
+    print(request)
+    print(request.POST)
+    #req = json.loads(request.body)
+    #req = request.body
 
-    req = json.loads(request.body)
-    print(req)
-    id = req['id']  # 组号
+
+    # print(req)
+    # id = req['id']  # 组号
+    # name = req['name']
+    # phonenumber = req['phonenumber']
+    # idcard = req['idcard']
+
+    id=request.POST.get('id')
+    print(id)
+    name = request.POST.get('name')
+    print(name)
+    phonenumber = request.POST.get('phonenumber')
+    idcard = request.POST.get('idcard')
     farmer =Farmers.objects.get(id=id)
-    name = req['name']
-    phonenumber = req['phonenumber']
-    idcard = req['idcard']
-    # images = request.FILES
-    # auth = images['auth']
+
+
+
+
+    images = request.FILES
+    print(images)
+    auth = images['auth']
+    #auth = images['auth']
 
     #, authInfo = auth
-    FarmersMember.objects.create(name=name, phoneNumber=phonenumber, IDCard=idcard, group=farmer)
+    FarmersMember.objects.create(name=name, phoneNumber=phonenumber, IDCard=idcard, group=farmer,authInfo = auth)
     farmer.memberNumber = farmer.memberNumber+1
+    #farmer.authInfo = auth
     farmer.authState = "审核中"
+    farmer.save()
     mydict = {'result': SUCCESS, 'msg': '添加成功'}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
@@ -496,6 +542,28 @@ def all_manager(request):
     mydict = {'result': SUCCESS, 'msg': '获取成功', 'data': admin_ser.data}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
+
+def delete_manager(request):
+    """
+    POST
+    :param request: 要删除的管理员id列表
+    :return: 更新后的管理员列表
+    """
+    req = json.loads(request.body)
+    manager_list = req['del_list']
+    for manid in manager_list:
+        manager = Administrator.objects.get(id=manid)
+        if manager:
+            manager.delete()
+        else:
+            all_manager = Administrator.objects.all()
+            manager_ser = AdministratorSerializer(all_manager, many=True)
+            mydict = {'result': ERROR, 'msg': '用户不存在！', 'data': manager_ser.data}
+            return HttpResponse(json.dumps(mydict), content_type="application/json")
+    all_manager = Administrator.objects.all()
+    manager_ser = AdministratorSerializer(all_manager, many=True)
+    mydict = {'result': SUCCESS, 'msg': '删除成功', 'data': manager_ser.data}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
 def get_auth_enterprise(request):#  获取企业审核列表-管理员用

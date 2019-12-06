@@ -8,23 +8,28 @@ class EnterpriseSerializer(serializers.ModelSerializer):
         model = Enterprise
         exclude = ('password',)
 
-
-class ForemanSerializer(serializers.ModelSerializer):
+class FarmersMemberSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Foreman
-        exclude = ('password','openid',)
-
+        model = FarmersMember
+        fields = "__all__"
 
 class FarmersSerializer(serializers.ModelSerializer):
+    #members  = FarmersMemberSerializer(read_only=True, many=True)
     class Meta:
         model = Farmers
         fields = "__all__"
 
 
-class FarmersMemberSerializer(serializers.ModelSerializer):
+class ForemanSerializer(serializers.ModelSerializer):
+    #groups = FarmersSerializer(read_only=True, many=True)
     class Meta:
-        model = FarmersMember
-        fields = "__all__"
+        model = Foreman
+        exclude = ('password','openid',)
+
+
+
+
+
 
 class AdministratorSerializer(serializers.ModelSerializer):
     class Meta:
