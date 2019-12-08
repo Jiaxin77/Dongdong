@@ -29,23 +29,26 @@ class Enterprise(models.Model):
     enterName = models.CharField(max_length=500, null=True, verbose_name="企业名称")
     enterDes = models.CharField(max_length=1000, null=True, verbose_name="企业简介")
     scope = models.CharField(max_length=1000, null=True, verbose_name="经营范围")
+    nowProject = models.CharField(max_length=1000,null=True,verbose_name="当前工程")
+    #icon = models.ImageField(upload_to='head',null=True)
 
-    icon = models.ImageField(upload_to='head',null=True)
+    #资质信息
 
 
-    # 这部分必须的 default=1？否则default=0？  【必须和非必须怎么表示？】
     # 头像
     # 营业执照
-    # 建筑资质
-    # 安全生产许可证
-    # 社保缴费证明（6个月）
-    # 拟用工项目中标通知书或其他文件
-    # 项目商业保险
-    # 无纳税异常声明
-    # 土地使用证
-    # 规划许可证
-    # 施工许可证
-    # 开工报告
+    businessLicense = models.FileField(upload_to='businessLicense', null=True, verbose_name="营业执照")
+    constructionQUAL = models.FileField(upload_to='constructionQUAL', null=True, verbose_name="建筑资质")
+    securityLicense = models.FileField(upload_to='securityLicense', null=True,verbose_name="安全许可证")
+    socialSecurityCert = models.FileField(upload_to='socialSecurityCert', null=True, verbose_name="社保缴费证明")
+    noticeOfBid = models.FileField(upload_to='noticeOfBid', null=True, verbose_name="拟用工项目中标通知书或其他文件")
+    businessItemInsurance = models.FileField(upload_to='businessItemInsurance', null=True, verbose_name="商业项目保险")
+    noTaxExpStatement = models.FileField(upload_to='noTaxExpStatement', null=True, verbose_name="无纳税异常声明")
+    planningPermit = models.FileField(upload_to='planningPermit', null=True, verbose_name='规划许可证')
+    constructionPermit = models.FileField(upload_to='constructionPermit', null=True, verbose_name="施工许可证")
+    landUseCert = models.FileField(upload_to='landUseCert', null=True, verbose_name="土地使用证")
+    startReport = models.FileField(upload_to='startReport', null=True, verbose_name="开工报告")
+
 
 
 

@@ -3,11 +3,11 @@ from django.contrib.sites import requests
 from django.http import JsonResponse, HttpResponse, request
 from django.shortcuts import render
 
-import requests
+
 # Create your views here.
 import json
 
-from rest_framework.views import APIView
+#from rest_framework.views import APIView
 
 from user.models import Enterprise, Farmers, Administrator, Foreman, FarmersMember
 from django.contrib import messages
@@ -164,6 +164,31 @@ def login(request):  # 登录   ——目前登录改成了SUCCESS和ERROR，看
                 print(mydict)
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
                 # return render(request,'login.html',json.dumps(mydict))
+        if status == 'mag':
+            thisUser = Administrator.objects.filter(name=username)
+            if thisUser.exists():
+                for user in thisUser:
+                    ret = check_password(password, user.password)
+                    if ret:
+                        serializer = EnterpriseSerializer(user)
+                        msg = "登录成功"
+
+                        mydict = {'result': SUCCESS, 'msg': msg, 'user': serializer.data}
+                        print(mydict)
+                        return HttpResponse(json.dumps(mydict), content_type="application/json")
+                        # return render(request,'login.html',json.dumps(mydict))
+                    else:
+                        msg = "密码错误，登录失败"
+                        mydict = {'result': ERROR, 'msg': msg, 'user': '-1'}  # 前端不读user
+                        print(mydict)
+                        return HttpResponse(json.dumps(mydict), content_type="application/json")
+                        # return render(request,'login.html',json.dumps(mydict))
+            else:
+                msg = "用户名不存在"
+                mydict = {'result': ERROR, 'msg': msg, 'user': '-1'}  # 前端不读user
+                print(mydict)
+                return HttpResponse(json.dumps(mydict), content_type="application/json")
+                # return render(request,'login.html',json.dumps(mydict))
         if status == 'far':  #小程序农民工
             code = req['code']
             thisUser = Foreman.objects.filter(name=username)
@@ -228,7 +253,8 @@ def get_openid(jscode):
         errmsg = r.json()['errmsg']
         return -1
 
-def change_password(request): #修改密码 --登录时
+
+def change_password(request):  # 修改密码 --登录时
     """
 
     :param request: 用户名、新密码
@@ -237,7 +263,7 @@ def change_password(request): #修改密码 --登录时
 
     req = json.loads(request.body)
     print(req)
-    status = req['user_type'] #身份
+    status = req['user_type']  # 身份 far/ent/mag
     username = req['username']
     password = req['password']
     if status == 'far':
@@ -254,6 +280,34 @@ def change_password(request): #修改密码 --登录时
             print(mydict)
             return HttpResponse(json.dumps(mydict), content_type="application/json")
 
+    if status == 'ent':
+        enterprise = Enterprise.objects.filter(name=username)
+        if enterprise.exists():
+            for user in enterprise:
+                user.password = make_password(password, None, 'pbkdf2_sha256')
+                user.save()
+                mydict = {'result': SUCCESS, 'msg': '修改成功！'}
+                print(mydict)
+                return HttpResponse(json.dumps(mydict), content_type="application/json")
+        else:
+            mydict = {'result': ERROR, 'msg': '用户不存在！'}
+            print(mydict)
+            return HttpResponse(json.dumps(mydict), content_type="application/json")
+    if status == 'mag':
+        manager = Administrator.objects.filter(name=username)
+        if manager.exists():
+            for user in manager:
+                user.password = make_password(password, None, 'pbkdf2_sha256')
+                user.save()
+                mydict = {'result': SUCCESS, 'msg': '修改成功！'}
+                print(mydict)
+                return HttpResponse(json.dumps(mydict), content_type="application/json")
+        else:
+            mydict = {'result': ERROR, 'msg': '用户不存在！'}
+            print(mydict)
+            return HttpResponse(json.dumps(mydict), content_type="application/json")
+
+
 
 
     # 判断数据库中是否有这个用户
@@ -263,10 +317,20 @@ def change_password(request): #修改密码 --登录时
     mydict = {'msg': ''}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
-def ent_info_post(request):  # 企业信息提交——要分资质提交和普通信息提交吗？
+
+def ent_basicinfo_post(request): #  企业基本信息提交
     """
     POST
-    :param request: 企业id，企业各资质信息图片、企业名称等信息
+    :param request:用户名、在建工程名称、经营范围、企业介绍
+    :return:
+    """
+
+
+def ent_info_post(request):  # 企业资质信息提交
+    # （营业执照、建筑资质、安全许可证、社保缴费证明、拟用工项目中标通知书或其他文件、商业项目保险、无纳税异常声明、规划许可证、施工许可证、土地使用证、开工报告）
+    """
+    POST
+    :param request: 企业id，企业各资质信息图片
     :return: 成功/失败
     """
 
@@ -304,11 +368,12 @@ def ent_info_post(request):  # 企业信息提交——要分资质提交和普�
     mydict = {'msg': 'success'}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
+
 def ent_info_get(request):  # 企业信息获取（企业资料、审核结果）
     """
     GET
     :param request: 企业id
-    :return:企业资料、审核结果、审核意见
+    :return:企业资料（基本信息+资质信息）、审核结果、审核意见
 
     """
 
@@ -327,6 +392,7 @@ def ent_info_get(request):  # 企业信息获取（企业资料、审核结果�
     mydict = {'msg': 'success','result':data}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
     #return render(request,'show.html',{'icon':img})
+
 
 
 def foreman_info_get(request):  # 包工头信息获取(查看自己的个人资料)
@@ -492,7 +558,7 @@ def group_show_member(request):#展示该组成员
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
-def register_manager(request):
+def register_manager(request):  # 新增管理员
     """
     POST
     :param request: 管理员用户名、密码
@@ -531,7 +597,8 @@ def register_manager(request):
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
                 # return render(request,'login.html',{'msg':'注册成功'}
 
-def all_manager(request):
+
+def all_manager(request):  # 获取所有管理员
     """
     GET
     :param request:
@@ -543,7 +610,7 @@ def all_manager(request):
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
-def delete_manager(request):
+def delete_manager(request):  # 删除管理员
     """
     POST
     :param request: 要删除的管理员id列表
@@ -566,7 +633,7 @@ def delete_manager(request):
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
-def get_auth_enterprise(request):#  获取企业审核列表-管理员用
+def get_auth_enterprise(request):#  获取企业列表-管理员用
     """
     GET
     :param request: 管理员登录状态？
@@ -576,12 +643,12 @@ def get_auth_enterprise(request):#  获取企业审核列表-管理员用
     # 获取所有企业列表和审核状态
     # （前端首先显示待审核企业）
     enterList = Enterprise.objects.all()
-    enter_ser = EnterpriseSerializer(enterList,many=True)
+    enter_ser = EnterpriseSerializer(enterList, many=True)
     mydict = {'result': SUCCESS, 'msg': '获取成功', 'data': enter_ser.data}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
-def get_enter_auth_info(request): #  获取审核某个企业-管理员用 （提供下载功能）
+def get_enter_auth_info(request): #  获取审核某个企业-管理员用 （提供下载功能） ——获取企业详情
     """
     GET
     :param request: 企业id
@@ -589,7 +656,7 @@ def get_enter_auth_info(request): #  获取审核某个企业-管理员用 （�
     """
 
 
-def post_auth_result(request): #  提交审核结果-管理员用
+def post_enter_auth_result(request):  # 提交企业审核结果-管理员用
     """
     POST
     :param request: 列表：每项为：企业id、审核结果、审核意见
@@ -609,3 +676,26 @@ def post_auth_result(request): #  提交审核结果-管理员用
 
     mydict = {'result': SUCCESS, 'msg': '提交成功'}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
+
+
+def get_all_groups(request):  # 获取农民工小组列表
+    """
+    GET
+    :param request:
+    :return:小组列表(小组id，工头姓名、小组名称如木工01组、审核状态)
+    """
+
+
+def get_one_group_info(request):  # 获取某单个小组信息
+    """
+    GET
+    :param request: 小组id
+    :return: 工头姓名、工头资料、小组名称、小组成员信息、审核状态
+    """
+
+def post_group_auth_info(request):  # 提交某个小组审核结果
+    """
+    POST
+    :param request: 小组id、审核结果、审核意见
+    :return: 成功/失败
+    """

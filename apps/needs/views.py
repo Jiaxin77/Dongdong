@@ -60,7 +60,7 @@ def post_needs(request):  # 企业发布需求
     print(req)
     enterid = req['id']
     req_form = req['parameter']
-    needsDes = req_form['needsDes']
+    #needsDes = req_form['needsDes']
     needsFarmerType = req_form['needsFarmerType']
     needsNum = req_form['needsNum']
     price = req_form['price']
@@ -72,7 +72,7 @@ def post_needs(request):  # 企业发布需求
     # remarks = req_form['remarks']
     enter = Enterprise.objects.get(id=enterid)
 
-    data_dict = {"enterId": enter.id, "needsDes": needsDes, "needsFarmerType": needsFarmerType,
+    data_dict = {"enterId": enter.id, "needsDes": enter.nowroject, "needsFarmerType": needsFarmerType,
                  'needsNum': needsNum, 'price': price, 'needsBeginTime': needsBeginTime, 'needsLocation': needsLocation,
                  'needsEndTime': needsEndTime, 'needsType': "匹配中"}  ###删掉了remarks，des
 
@@ -354,32 +354,44 @@ def auto_begin_needs():  # 自动开始需求（根据系统时间）
             return 0
 
 
-def cancel_needs(request):  # 企业取消需求
-    """
-
-    :param request: 需求id
-    :return: 成功/失败
-    """
-
-    # 查找对应需求，置需求状态
-    # ？？？存在已开工情况吗 若已开工需要取消订单
-    # 置农民工正在需求状态
-
-    mydict = {'msg': ''}
-    return HttpResponse(json.dumps(mydict), content_type="application/json")
-
-
-def auto_cancel_needs():  # 系统自动取消需求（到开工时间未招齐）
-    """
-
-    :return:
-    """
-    # 定期检测调用此函数
-    # 置需求状态
-    # 置农民工正在需求状态
-
-# def auto_time(): #  时间定期检测
+# def cancel_needs(request):  # 企业取消需求
 #     """
-#     时间检测，每过一天检测一次。需求开工or取消
+#
+#     :param request: 需求id
+#     :return: 成功/失败
+#     """
+#
+#     # 查找对应需求，置需求状态
+#     # ？？？存在已开工情况吗 若已开工需要取消订单
+#     # 置农民工正在需求状态
+#
+#     mydict = {'msg': ''}
+#     return HttpResponse(json.dumps(mydict), content_type="application/json")
+
+
+# def auto_cancel_needs():  # 系统自动取消需求（到开工时间未招齐）
+#     """
+#
 #     :return:
 #     """
+#     # 定期检测调用此函数
+#     # 置需求状态
+#     # 置农民工正在需求状态
+#
+# # def auto_time(): #  时间定期检测
+# #     """
+# #     时间检测，每过一天检测一次。需求开工or取消
+# #     :return:
+# #     """
+
+
+def get_all_needs(requests):  # 获取所有需求列表——管理员用
+    """
+    GET
+    :return: 需求列表序列化信息
+    """
+    needs = Needs.objects.all()
+    needs_ser = NeedsSerializer(needs, many=True)
+    mydict = {'result': SUCCESS, 'msg': '成功获取！','data':needs_ser.data}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
+
