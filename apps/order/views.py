@@ -77,7 +77,7 @@ def get_orders(request):  # 获取需求对应订单!!!!!!【！！！】
     """
 
     # 根据需求id查订单序列化列表
-
+    
     mydict = {'msg': ''}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 

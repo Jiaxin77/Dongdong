@@ -333,19 +333,40 @@ def ent_info_post(request):  # 企业资质信息提交
     :param request: 企业id，企业各资质信息图片
     :return: 成功/失败
     """
+    id = request.POST.get('id') #企业id
+    print(id)
 
-    enterid = "1"
-    #form = InfoForm(request.POST, request.FILES)
-    print(request.body)
+    enter = Enterprise.objects.get(id=id)
 
-    images = request.FILES
-    print(images)
+    files = request.FILES
+    print(files)
+    businessLicense = files['businessLicense']
+    constructionQUAL = files['constructionQUAL']
+    securityLicense = files['securityLicense']
+    socialSecurityCert = files['socialSecurityCert']
+    noticeOfBid = files['noticeOfBid']
+    businessItemInsurance = files['businessItemInsurance']
+    noTaxExpStatement = files['noTaxExpStatement']
+    planningPermit = files['planningPermit']
+    constructionPermit = files['constructionPermit']
+    landUseCert = files['landUseCert']
+    startReport = files['startReport']
 
-    enter = Enterprise.objects.get(id=enterid)
-    enter.icon = images['icon']
-    enter.save();
+    enter.businessLicense = businessLicense
+    enter.constructionQUAL = constructionQUAL
+    enter.securityLicense = securityLicense
+    enter.socialSecurityCert = socialSecurityCert
+    enter.noticeOfBid = noticeOfBid
+    enter.businessItemInsurance = businessItemInsurance
+    enter.noTaxExpStatement = noTaxExpStatement
+    enter.planningPermit = planningPermit
+    enter.constructionPermit = constructionPermit
+    enter.landUseCert = landUseCert
+    enter.startReport = startReport
 
-    return HttpResponse("success")
+    enter.save()
+    mydict = {'result': SUCCESS, 'msg': "提交成功！"}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
     # print(request.body)
