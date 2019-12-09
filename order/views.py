@@ -1,3 +1,6 @@
+from django.shortcuts import render
+
+# Create your views here.
 import json
 import random
 
@@ -77,7 +80,7 @@ def get_orders(request):  # 获取需求对应订单!!!!!!【！！！】
     """
 
     # 根据需求id查订单序列化列表
-    
+
     mydict = {'msg': ''}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
@@ -98,6 +101,7 @@ def pay_for_orders(request):  # 支付订单
     mydict = {'result': SUCCESS, 'msg': '交易完成！'}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
+
 # def get_all_money(request):  # 获取总金额
 #     """
 #
@@ -117,6 +121,7 @@ def get_order_info(request):  # 根据某订单id获取某订单信息 -- 管理
     :param request: 订单id
     :return: 某订单序列化信息
     """
+
 
 #  订单下载
 
