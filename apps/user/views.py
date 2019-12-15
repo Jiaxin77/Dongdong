@@ -1,5 +1,6 @@
 from django.contrib.messages import SUCCESS, ERROR
-from django.contrib.sites import requests
+#from django.contrib.sites import requests
+import requests
 from django.http import JsonResponse, HttpResponse, request
 from django.shortcuts import render
 
@@ -321,9 +322,26 @@ def change_password(request):  # 修改密码 --登录时
 def ent_basicinfo_post(request): #  企业基本信息提交
     """
     POST
-    :param request:用户名、在建工程名称、经营范围、企业介绍
+    :param request:企业id，用户名、在建工程名称、经营范围、企业介绍
     :return:
     """
+    req = json.loads(request.body)
+    id = req['id']
+    enterName = req['enterName']
+    scope = req['scope']
+    nowProject = req['nowProject']
+    enterDes = req['enterDes']
+
+    enter = Enterprise.objects.get(id=id)
+    enter.enterName = enterName
+    enter.scope = scope
+    enter.nowProject = nowProject
+    enter.enterDes = enterDes
+    enter.save()
+
+    mydict = {'result': SUCCESS, 'msg': "提交成功！"}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
+
 
 
 def ent_info_post(request):  # 企业资质信息提交
@@ -333,6 +351,14 @@ def ent_info_post(request):  # 企业资质信息提交
     :param request: 企业id，企业各资质信息图片
     :return: 成功/失败
     """
+
+    print(request)
+    #print(request.body)
+    # req = request.body
+    # id = req['id']
+    print(request.POST)
+    files = request.FILES
+    print(files)
     id = request.POST.get('id') #企业id
     print(id)
 
@@ -340,30 +366,40 @@ def ent_info_post(request):  # 企业资质信息提交
 
     files = request.FILES
     print(files)
-    businessLicense = files['businessLicense']
-    constructionQUAL = files['constructionQUAL']
-    securityLicense = files['securityLicense']
-    socialSecurityCert = files['socialSecurityCert']
-    noticeOfBid = files['noticeOfBid']
-    businessItemInsurance = files['businessItemInsurance']
-    noTaxExpStatement = files['noTaxExpStatement']
-    planningPermit = files['planningPermit']
-    constructionPermit = files['constructionPermit']
-    landUseCert = files['landUseCert']
-    startReport = files['startReport']
-
-    enter.businessLicense = businessLicense
-    enter.constructionQUAL = constructionQUAL
-    enter.securityLicense = securityLicense
-    enter.socialSecurityCert = socialSecurityCert
-    enter.noticeOfBid = noticeOfBid
-    enter.businessItemInsurance = businessItemInsurance
-    enter.noTaxExpStatement = noTaxExpStatement
-    enter.planningPermit = planningPermit
-    enter.constructionPermit = constructionPermit
-    enter.landUseCert = landUseCert
-    enter.startReport = startReport
-
+    if 'businessLicense' in files.keys():
+        businessLicense = files['businessLicense']
+        enter.businessLicense = businessLicense
+    if 'constructionQUAL' in files.keys():
+        constructionQUAL = files['constructionQUAL']
+        enter.constructionQUAL = constructionQUAL
+    if 'securityLicense' in files.keys():
+        securityLicense = files['securityLicense']
+        enter.securityLicense = securityLicense
+    if 'socialSecurityCert' in files.keys():
+        socialSecurityCert = files['socialSecurityCert']
+        enter.socialSecurityCert = socialSecurityCert
+    if 'noticeOfBid' in files.keys():
+        noticeOfBid = files['noticeOfBid']
+        enter.noticeOfBid = noticeOfBid
+    if 'businessItemInsurance' in files.keys():
+        businessItemInsurance = files['businessItemInsurance']
+        enter.businessItemInsurance = businessItemInsurance
+    if 'noTaxExpStatement' in files.keys():
+        noTaxExpStatement = files['noTaxExpStatement']
+        enter.noTaxExpStatement = noTaxExpStatement
+    if 'planningPermit' in files.keys():
+        planningPermit = files['planningPermit']
+        enter.planningPermit = planningPermit
+    if 'constructionPermit' in files.keys():
+        constructionPermit = files['constructionPermit']
+        enter.constructionPermit = constructionPermit
+    if 'landUseCert' in files.keys():
+        landUseCert = files['landUseCert']
+        enter.landUseCert = landUseCert
+    if 'startReport' in files.keys():
+        startReport = files['startReport']
+        enter.startReport = startReport
+    enter.authState = "审核中"
     enter.save()
     mydict = {'result': SUCCESS, 'msg': "提交成功！"}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
@@ -406,11 +442,9 @@ def ent_info_get(request):  # 企业信息获取（企业资料、审核结果�
     enter = Enterprise.objects.get(id=enterid)
     #img = enter.icon
     #print(img)
-    data = [
-        {"id":1},
-        {"id":2}
-    ]
-    mydict = {'msg': 'success','result':data}
+    enter_ser = EnterpriseSerializer(enter)
+
+    mydict = {'msg': 'success','result':enter_ser.data}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
     #return render(request,'show.html',{'icon':img})
 
@@ -676,6 +710,12 @@ def get_enter_auth_info(request): #  获取审核某个企业-管理员用 （�
     :return: 企业信息
     """
 
+    enterid = request.GET.get('id')
+    enter = Enterprise.objects.get(id=enterid)
+    enter_ser = EnterpriseSerializer(enter)
+    mydict = {'result': SUCCESS, 'msg': '获取成功','data':enter_ser.data}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
+
 
 def post_enter_auth_result(request):  # 提交企业审核结果-管理员用
     """
@@ -705,6 +745,10 @@ def get_all_groups(request):  # 获取农民工小组列表
     :param request:
     :return:小组列表(小组id，工头姓名、小组名称如木工01组、审核状态)
     """
+    groupList = Farmers.objects.all()
+    group_ser = FarmersSerializer(groupList,many=True)
+    mydict = {'result': SUCCESS, 'msg': '获取成功', 'data': group_ser.data}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
 def get_one_group_info(request):  # 获取某单个小组信息
@@ -713,6 +757,13 @@ def get_one_group_info(request):  # 获取某单个小组信息
     :param request: 小组id
     :return: 工头姓名、工头资料、小组名称、小组成员信息、审核状态
     """
+    groupid = request.GET.get('id') #小组id
+    group = Farmers.objects.get(id=groupid)
+    group_ser = FarmersSerializer(group)
+    members = FarmersMember.objects.filter(group=group)
+    members_ser = FarmersMemberSerializer(members,many=True)
+    mydict = {'result': SUCCESS, 'msg': '获取成功', 'group_data': group_ser.data,'members':members_ser.data}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 def post_group_auth_info(request):  # 提交某个小组审核结果
     """
@@ -720,3 +771,12 @@ def post_group_auth_info(request):  # 提交某个小组审核结果
     :param request: 小组id、审核结果、审核意见
     :return: 成功/失败
     """
+    req = json.loads(request.body)
+    id = req['id']
+    auth_result = req['auth_result']
+
+    group = Farmers.objects.get(id=id)
+    group.authState = auth_result
+    group.save()
+    mydict = {'result': SUCCESS, 'msg': '提交成功'}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")

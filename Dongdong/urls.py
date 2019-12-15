@@ -21,6 +21,7 @@ from django.urls import include,path
 urlpatterns = [
     path('api/user/',include('user.urls')),#导入user应用的urls.py
     path('api/needs/',include('needs.urls')),
+    path('api/order/',include('order.urls')),
     path('admin/', admin.site.urls),
 
 

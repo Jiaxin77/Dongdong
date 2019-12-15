@@ -13,7 +13,7 @@ class Order(models.Model):
         (2, "已完成"),
         (3, "已取消")
     )
-    p_id = models.AutoField(primary_key=True,default=0, verbose_name="订单序号")
+    p_id = models.AutoField(primary_key=True, verbose_name="订单序号")
     id = models.CharField(max_length=1000,default="000",verbose_name="订单流水号")
     #   entid = models.ForeignKey("user.Enterprise",on_delete=models.CASCADE,verbose_name="此订单所属企业") --从所属需求中读取
     farmers = models.ManyToManyField("user.Farmers",verbose_name="组")  # 组

@@ -6,7 +6,7 @@ from user.serializer import FarmersSerializer,EnterpriseSerializer
 
 class NeedsSerializer(serializers.ModelSerializer):
     matchResult = FarmersSerializer(many=True,read_only=True)
-    enterId = EnterpriseSerializer(read_only=True)
+    #enterId = EnterpriseSerializer(read_only=True)
 
     class Meta:
         model = Needs

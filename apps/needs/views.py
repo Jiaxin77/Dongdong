@@ -1,17 +1,15 @@
 from django.contrib.messages import SUCCESS, ERROR
 from django.http import HttpResponse
-from django.shortcuts import render
 import json
 
 # Create your views here.
-from needs.models import Needs, needType
+from needs.models import Needs
 from needs.serializer import NeedsSerializer
 
 from order.models import Order
 from order.views import create_order_id, price_to_app
 
-from user.models import Enterprise, farmerType, Foreman, Farmers, FarmersMember
-from datetime import datetime, date
+from user.models import Enterprise, Foreman, Farmers, FarmersMember
 import time
 from django.utils import timezone
 
@@ -30,8 +28,8 @@ try:
 
     # 设置定时任务，选择方式为interval，时间间隔为10s
     # 另一种方式为每天固定时间执行任务，对应代码为：
-    @register_job(scheduler, 'cron', day_of_week='mon-sun', hour='8', minute='01', second='00', id='task_time')
-    # @register_job(scheduler,"interval", seconds=10)
+    # @register_job(scheduler, 'cron', day_of_week='mon-sun', hour='8', minute='01', second='00', id='task_time')
+    @register_job(scheduler,"interval", seconds=10)
     def my_job():
         # 这里写你要执行的任务
         # 检测时间
@@ -74,7 +72,7 @@ def post_needs(request):  # 企业发布需求
     # remarks = req_form['remarks']
     enter = Enterprise.objects.get(id=enterid)
 
-    data_dict = {"enterId": enter.id, "needsDes": enter.nowroject, "needsFarmerType": needsFarmerType,
+    data_dict = {"enterId": enter.id, "needsDes": enter.nowProject, "needsFarmerType": needsFarmerType,
                  'needsNum': needsNum, 'price': price, 'needsBeginTime': needsBeginTime, 'needsLocation': needsLocation,
                  'needsEndTime': needsEndTime, 'needsType': "匹配中"}  ###删掉了remarks，des
 
@@ -341,15 +339,18 @@ def auto_begin_needs():  # 自动开始需求（根据系统时间）
                     need.needsType = "匹配完成待支付"
                     need.save()
                     # 创建订单
-                    for group in need.matchResult:
+                    print(Needs.objects.get(id=need.id).matchResult.all())
+                    print(need.matchResult.all())
+                    for group in Needs.objects.get(id=need.id).matchResult.all():
                         orderid = create_order_id(need.id, group.id)
                         money = need.price*(group.memberNumber/need.needsNum)
                         #####未写完
                         Order.objects.create(id=orderid,entid=need.enterId, farmers=group, money=money,moneyToFarmers=money*(1-price_to_app),moneyToApp=money*price_to_app,needId=need,status="交易中")
                 else:  # 未匹配成功
                     need.needsType = "匹配失败"
-                    print("到时间了！需求" + need.needsDes + "匹配失败！")
                     need.save()
+                    print("到时间了！需求" + need.needsDes + "匹配失败！")
+
 
         except Exception as e:
             print(e)

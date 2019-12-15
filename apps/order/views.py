@@ -7,6 +7,8 @@ import random
 from django.contrib.messages import SUCCESS, ERROR
 from django.http import HttpResponse
 from django.shortcuts import render
+
+from needs.models import Needs
 from order.models import Order
 from order.serializer import OrderSerializer
 import time
@@ -15,6 +17,9 @@ import time
 
 # 金额分配比例
 # 给app的
+from user.models import FarmersMember
+from user.serializer import FarmersMemberSerializer, FarmersSerializer
+
 price_to_app = 0.2
 
 
@@ -76,12 +81,28 @@ def get_orders(request):  # 获取需求对应订单!!!!!!【！！！】
     """
     GET
     :param request: 需求id
-    :return: 订单列表（订单id，订单编号、交易实践、工头名字、人员姓名、编号？、身份证号、联系方式，订单总额）+所有订单总额
+    :return: 订单列表（订单id，订单编号、交易时间、工头名字、人员姓名、、身份证号、联系方式，订单总额）+所有订单总额
     """
 
     # 根据需求id查订单序列化列表
-
-    mydict = {'msg': ''}
+    needid = request.GET.get('id') #需求id
+    need = Needs.objects.get(id=needid)
+    orders = Order.objects.filter(needId=need)
+    orders_ser = OrderSerializer(orders, many=True)
+    allMoney = 0
+    allMoneyToFarmers = 0
+    allMoneyToApp = 0
+    orderList = []
+    for order in orders:
+        group = order.farmers.get(order=order)
+        members = FarmersMember.objects.filter(group=group)
+        members_ser = FarmersMemberSerializer(members,many=True)
+        thisOrder={'id':order.id,'pid':order.p_id,'lastModified':str(order.lastModified),'money':order.money,'moneyToFarmers':order.moneyToFarmers,'moneyToApp':order.moneyToApp,'status':order.status,'group_leader':group.leader.name,'members':members_ser.data}
+        allMoney=allMoney+order.money
+        allMoneyToFarmers=allMoneyToFarmers+order.moneyToFarmers
+        allMoneyToApp=allMoneyToApp+order.moneyToApp
+        orderList.append(thisOrder)
+    mydict = {'result': SUCCESS,'msg':'成功获取','data':orderList,'allMoney':allMoney,'allMoneyToFarmers':allMoneyToFarmers,'allMoneyToApp':allMoneyToApp}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
@@ -94,10 +115,24 @@ def pay_for_orders(request):  # 支付订单
     """
     req = json.loads(request.body)
     idList = req['idList']  # 流水号
+
+    AllOrders = Order.objects.all()
     for id in idList:
         order = Order.objects.get(id=id)
         order.status = "已完成"
         order.save()
+        #如果需求的订单全部支付，则状态为已完成
+        need = order.needId
+        myOrderList = Order.objects.filter(needId=need)
+        flag = True
+        for myOrder in myOrderList:
+            if myOrder.status != "已完成":
+                flag = False
+        if flag:
+            need.needsType = "已完成"
+            need.save()
+
+    #对某个需求来说！
     mydict = {'result': SUCCESS, 'msg': '交易完成！'}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
@@ -121,7 +156,15 @@ def get_order_info(request):  # 根据某订单id获取某订单信息 -- 管理
     :param request: 订单id
     :return: 某订单序列化信息
     """
-
+    id = request.GET.get("pid") #订单pid
+    order = Order.objects.get(p_id=id)
+    order_ser = OrderSerializer(order)
+    group = order.farmers.get(order=order)
+    group_ser = FarmersSerializer(group)
+    members = FarmersMember.objects.filter(group=group)
+    members_ser = FarmersMemberSerializer(members,many=True)
+    mydict = {'result': SUCCESS, 'msg': '获取成功！','order_data':order_ser.data,'group_data':group_ser.data,'member_data':members_ser.data}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 #  订单下载
 

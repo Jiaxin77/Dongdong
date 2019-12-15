@@ -1,10 +1,11 @@
 from django.db import models
 
 # Create your models here.
+from system.storage import ImageStorage
 
 # 企业审核状态
 enterState = (
-    (-1, '未审核'),
+    (-1, '未提交'),
     (1, '审核中'),
     (2, '已通过'),
     (3, '未通过')
@@ -19,7 +20,7 @@ farmerType = (
 
 
 def enter_auth_file(instance, filename):
-    return "enterAuth/{enterprise}/{authType}/{file}".format(instance.id, enterprise=instance.enterName,
+    return "enterAuth/{enterprise}/{file}".format(instance.id, enterprise=instance.enterName,
                                                              file=filename)
 # 企业库
 class Enterprise(models.Model):
@@ -40,17 +41,17 @@ class Enterprise(models.Model):
 
     # 头像
     # 营业执照
-    businessLicense = models.FileField(upload_to=enter_auth_file, null=True, verbose_name="营业执照")
-    constructionQUAL = models.FileField(upload_to=enter_auth_file, null=True, verbose_name="建筑资质")
-    securityLicense = models.FileField(upload_to=enter_auth_file, null=True,verbose_name="安全许可证")
-    socialSecurityCert = models.FileField(upload_to=enter_auth_file, null=True, verbose_name="社保缴费证明")
-    noticeOfBid = models.FileField(upload_to=enter_auth_file, null=True, verbose_name="拟用工项目中标通知书或其他文件")
-    businessItemInsurance = models.FileField(upload_to=enter_auth_file, null=True, verbose_name="商业项目保险")
-    noTaxExpStatement = models.FileField(upload_to=enter_auth_file, null=True, verbose_name="无纳税异常声明")
-    planningPermit = models.FileField(upload_to=enter_auth_file, null=True, verbose_name='规划许可证')
-    constructionPermit = models.FileField(upload_to=enter_auth_file, null=True, verbose_name="施工许可证")
-    landUseCert = models.FileField(upload_to=enter_auth_file, null=True, verbose_name="土地使用证")
-    startReport = models.FileField(upload_to=enter_auth_file, null=True, verbose_name="开工报告")
+    businessLicense = models.FileField(upload_to=enter_auth_file,storage=ImageStorage(), null=True, verbose_name="营业执照")
+    constructionQUAL = models.FileField(upload_to=enter_auth_file, storage=ImageStorage(),null=True, verbose_name="建筑资质")
+    securityLicense = models.FileField(upload_to=enter_auth_file,storage=ImageStorage(), null=True,verbose_name="安全许可证")
+    socialSecurityCert = models.FileField(upload_to=enter_auth_file,storage=ImageStorage(), null=True, verbose_name="社保缴费证明")
+    noticeOfBid = models.FileField(upload_to=enter_auth_file, storage=ImageStorage(),null=True, verbose_name="拟用工项目中标通知书或其他文件")
+    businessItemInsurance = models.FileField(upload_to=enter_auth_file,storage=ImageStorage(), null=True, verbose_name="商业项目保险")
+    noTaxExpStatement = models.FileField(upload_to=enter_auth_file, storage=ImageStorage(),null=True, verbose_name="无纳税异常声明")
+    planningPermit = models.FileField(upload_to=enter_auth_file, storage=ImageStorage(),null=True, verbose_name='规划许可证')
+    constructionPermit = models.FileField(upload_to=enter_auth_file,storage=ImageStorage(), null=True, verbose_name="施工许可证")
+    landUseCert = models.FileField(upload_to=enter_auth_file,storage=ImageStorage(), null=True, verbose_name="土地使用证")
+    startReport = models.FileField(upload_to=enter_auth_file, storage=ImageStorage(),null=True, verbose_name="开工报告")
 
 
 

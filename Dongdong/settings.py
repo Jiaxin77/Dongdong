@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_apscheduler',
+    'corsheaders',
 
 ]
 
@@ -53,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    #'django.middleware.csrf.CsrfResponseMiddleware',
     #'django.middleware.csrf.CsrfViewMiddleware',  #暂时不用，但部署时要用，表单加csrf_token
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -64,8 +66,7 @@ ROOT_URLCONF = 'Dongdong.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
-        ,
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -93,7 +94,10 @@ DATABASES = {
         'USER': 'dddb001',
         'PASSWORD': 'dddb001',
         'HOST': 'localhost',
-        'PORT': 3306
+        'PORT': 3306,
+        'OPTIONS': {
+            "init_command": "SET foreign_key_checks = 0;"
+        }
 
 
     }
@@ -159,7 +163,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
