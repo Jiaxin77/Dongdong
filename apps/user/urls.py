@@ -29,4 +29,5 @@ urlpatterns = [
     path('getAllGroups',views.get_all_groups,name='get_all_groups'),
     path('getOneGroupInfo',views.get_one_group_info,name='get_one_group_info'),
     path('postGroupAuthInfo',views.post_group_auth_info,name='post_group_auth_info'),
+    path('entNamePost',views.ent_name_post,name='ent_name_post')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

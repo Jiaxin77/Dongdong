@@ -47,11 +47,11 @@ def register(request):
     :param request: 用户名、密码、web/mini
     :return:注册成功or失败
     """
-    print(request.body)
+    ##print(request.body)
     if request.method == "POST":
-        print(request.body)
+        #print(request.body)
         req = json.loads(request.body)
-        print(req)
+        #print(req)
         username = req['username']
         password = req['password']
         status = req['user_type']  # ent/man/far
@@ -63,7 +63,7 @@ def register(request):
                 msg = "用户名已存在"
                 mydict = {'result': ERROR,'msg': msg}
                 # return render(request,'login.html',{'msg':'用户名已存在'})
-                print("用户名已存在")
+                #print("用户名已存在")
                 # return render(request,"register",{'data':json.dumps(mydict)})
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
             else:
@@ -76,7 +76,7 @@ def register(request):
                 # messages.success(request, "注册成功")
                 msg = "注册成功"
                 mydict = {'result': SUCCESS,'msg': msg}
-                print("注册成功")
+                #print("注册成功")
                 # return render(request,"register",{'data': json.dumps(mydict)})
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
                 # return HttpResponse(serializer.data, content_type="application/json")
@@ -88,7 +88,7 @@ def register(request):
                 msg = "用户名已存在"
                 mydict = {'msg': msg}
                 # return render(request,'login.html',{'msg':'用户名已存在'})
-                print("用户名已存在")
+                #print("用户名已存在")
                 # return render(request,"register",{'data':json.dumps(mydict)})
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
             else:
@@ -106,13 +106,13 @@ def register(request):
                     # messages.success(request, "注册成功")
                     msg = "注册成功"
                     mydict = {'msg': msg}
-                    print("注册成功")
+                    #print("注册成功")
                     # return render(request,"register",{'data': json.dumps(mydict)})
                     return HttpResponse(json.dumps(mydict), content_type="application/json")
                 # else:
                 #     msg = "微信授权失败"
                 #     mydict = {'msg': msg}
-                #     print(msg)
+                #     #print(msg)
                 #     # return render(request,"register",{'data': json.dumps(mydict)})
                 #     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
@@ -130,16 +130,16 @@ def login(request):  # 登录   ——目前登录改成了SUCCESS和ERROR，看
              far：包工头id，需求邀请？
     """
     result = ""
-    print(request.body)
+    #print(request.body)
     if request.method == "POST":
         req = json.loads(request.body)
-        print(req)
+        #print(req)
         username = req['username']
-        print(username)
+        #print(username)
         password = req['password']
-        print(password)
+        #print(password)
         status = req['user_type']
-        print(status)
+        #print(status)
         if status == 'ent':
             thisUser = Enterprise.objects.filter(name=username)
             if thisUser.exists():
@@ -149,45 +149,46 @@ def login(request):  # 登录   ——目前登录改成了SUCCESS和ERROR，看
                         serializer = EnterpriseSerializer(user)
                         msg = "登录成功"
 
-                        mydict = {'result': SUCCESS, 'msg': msg, 'user': serializer.data}
-                        print(mydict)
+                        mydict = {'result': SUCCESS, 'msg': msg, 'user': serializer.data,'user_type':'ent'}
+                        #print(mydict)
                         return HttpResponse(json.dumps(mydict), content_type="application/json")
                         # return render(request,'login.html',json.dumps(mydict))
                     else:
                         msg = "密码错误，登录失败"
                         mydict = {'result': ERROR, 'msg': msg, 'user': '-1'}  # 前端不读user
-                        print(mydict)
+                        #print(mydict)
                         return HttpResponse(json.dumps(mydict), content_type="application/json")
                         # return render(request,'login.html',json.dumps(mydict))
             else:
                 msg = "用户名不存在"
                 mydict = {'result': ERROR, 'msg': msg, 'user': '-1'}  # 前端不读user
-                print(mydict)
+                #print(mydict)
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
                 # return render(request,'login.html',json.dumps(mydict))
         if status == 'mag':
+            #print("magggg")
             thisUser = Administrator.objects.filter(name=username)
             if thisUser.exists():
                 for user in thisUser:
                     ret = check_password(password, user.password)
                     if ret:
-                        serializer = EnterpriseSerializer(user)
+                        serializer = AdministratorSerializer(user)
                         msg = "登录成功"
 
-                        mydict = {'result': SUCCESS, 'msg': msg, 'user': serializer.data}
-                        print(mydict)
+                        mydict = {'result': SUCCESS, 'msg': msg, 'user': serializer.data,'user_type':'mag'}
+                        #print(mydict)
                         return HttpResponse(json.dumps(mydict), content_type="application/json")
                         # return render(request,'login.html',json.dumps(mydict))
                     else:
                         msg = "密码错误，登录失败"
                         mydict = {'result': ERROR, 'msg': msg, 'user': '-1'}  # 前端不读user
-                        print(mydict)
+                        #print(mydict)
                         return HttpResponse(json.dumps(mydict), content_type="application/json")
                         # return render(request,'login.html',json.dumps(mydict))
             else:
                 msg = "用户名不存在"
                 mydict = {'result': ERROR, 'msg': msg, 'user': '-1'}  # 前端不读user
-                print(mydict)
+                #print(mydict)
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
                 # return render(request,'login.html',json.dumps(mydict))
         if status == 'far':  #小程序农民工
@@ -204,31 +205,31 @@ def login(request):  # 登录   ——目前登录改成了SUCCESS和ERROR，看
                         if user.openid == myid and myid != -1 :
                             msg = "登录成功"
                             mydict = {'result': SUCCESS, 'msg': msg, 'user': serializer.data}
-                            print(mydict)
+                            #print(mydict)
                             return HttpResponse(json.dumps(mydict), content_type="application/json")
                         elif user.openid == 'null':
                             msg = "登录成功"
                             mydict = {'result': SUCCESS, 'msg': msg, 'user': serializer.data}
                             user.openid = myid
                             user.save()
-                            print(mydict)
+                            #print(mydict)
                             return HttpResponse(json.dumps(mydict), content_type="application/json")
                         else:
                             msg = "微信授权失败"
                             mydict = {'result': ERROR, 'msg': msg, 'user': serializer.data}
-                            print(mydict)
+                            #print(mydict)
                             return HttpResponse(json.dumps(mydict), content_type="application/json")
                         # return render(request,'login.html',json.dumps(mydict))
                     else:
                         msg = "密码错误，登录失败"
                         mydict = {'result': ERROR, 'msg': msg, 'user': '-1'}  # 前端不读user
-                        print(mydict)
+                        #print(mydict)
                         return HttpResponse(json.dumps(mydict), content_type="application/json")
                         # return render(request,'login.html',json.dumps(mydict))
             else:
                 msg = "用户名不存在"
                 mydict = {'result': ERROR, 'msg': msg, 'user': '-1'}  # 前端不读user
-                print(mydict)
+                #print(mydict)
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
                 # return render(request,'login.html',json.dumps(mydict))
 
@@ -244,9 +245,9 @@ def get_openid(jscode):
 
     url = URL + "?appid=" +APPID + "&secret=" + APPSECRET + "&js_code=" + jscode + "&grant_type=authorization_code"
     r = requests.get(url)
-    print(r)
-    print("rrrrr")
-    print(r.json())
+    #print(r)
+    #print("rrrrr")
+    #print(r.json())
     if 'openid' in r.json():
         openid = r.json()['openid']
         return openid
@@ -263,7 +264,7 @@ def change_password(request):  # 修改密码 --登录时
     """
 
     req = json.loads(request.body)
-    print(req)
+    #print(req)
     status = req['user_type']  # 身份 far/ent/mag
     username = req['username']
     password = req['password']
@@ -274,11 +275,11 @@ def change_password(request):  # 修改密码 --登录时
                 user.password = make_password(password, None, 'pbkdf2_sha256')
                 user.save()
                 mydict = {'result': SUCCESS, 'msg': '修改成功！'}
-                print(mydict)
+                #print(mydict)
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
         else:
             mydict = {'result': ERROR, 'msg': '用户不存在！'}
-            print(mydict)
+            #print(mydict)
             return HttpResponse(json.dumps(mydict), content_type="application/json")
 
     if status == 'ent':
@@ -288,11 +289,11 @@ def change_password(request):  # 修改密码 --登录时
                 user.password = make_password(password, None, 'pbkdf2_sha256')
                 user.save()
                 mydict = {'result': SUCCESS, 'msg': '修改成功！'}
-                print(mydict)
+                #print(mydict)
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
         else:
             mydict = {'result': ERROR, 'msg': '用户不存在！'}
-            print(mydict)
+            #print(mydict)
             return HttpResponse(json.dumps(mydict), content_type="application/json")
     if status == 'mag':
         manager = Administrator.objects.filter(name=username)
@@ -301,11 +302,11 @@ def change_password(request):  # 修改密码 --登录时
                 user.password = make_password(password, None, 'pbkdf2_sha256')
                 user.save()
                 mydict = {'result': SUCCESS, 'msg': '修改成功！'}
-                print(mydict)
+                #print(mydict)
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
         else:
             mydict = {'result': ERROR, 'msg': '用户不存在！'}
-            print(mydict)
+            #print(mydict)
             return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
@@ -325,15 +326,17 @@ def ent_basicinfo_post(request): #  企业基本信息提交
     :param request:企业id，用户名、在建工程名称、经营范围、企业介绍
     :return:
     """
+    #print(request.body)
     req = json.loads(request.body)
+    #print(req)
     id = req['id']
-    enterName = req['enterName']
+    #enterName = req['enterName']
     scope = req['scope']
     nowProject = req['nowProject']
     enterDes = req['enterDes']
 
     enter = Enterprise.objects.get(id=id)
-    enter.enterName = enterName
+    #enter.enterName = enterName
     enter.scope = scope
     enter.nowProject = nowProject
     enter.enterDes = enterDes
@@ -342,7 +345,21 @@ def ent_basicinfo_post(request): #  企业基本信息提交
     mydict = {'result': SUCCESS, 'msg': "提交成功！"}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
-
+def ent_name_post(request): #提交企业名称
+    """
+    POST
+    :param request:
+    :return:
+    """
+    req = json.loads(request.body)
+    id = req['id']
+    enterName = req['enterName']
+    enter = Enterprise.objects.get(id=id)
+    enter.enterName = enterName
+    enter.authState = "审核中"
+    enter.save()
+    mydict = {'result': SUCCESS, 'msg': "提交成功！"}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 def ent_info_post(request):  # 企业资质信息提交
     # （营业执照、建筑资质、安全许可证、社保缴费证明、拟用工项目中标通知书或其他文件、商业项目保险、无纳税异常声明、规划许可证、施工许可证、土地使用证、开工报告）
@@ -352,20 +369,20 @@ def ent_info_post(request):  # 企业资质信息提交
     :return: 成功/失败
     """
 
-    print(request)
-    #print(request.body)
+    #print(request)
+    ##print(request.body)
     # req = request.body
     # id = req['id']
-    print(request.POST)
+    #print(request.POST)
     files = request.FILES
-    print(files)
+    #print(files)
     id = request.POST.get('id') #企业id
-    print(id)
+    #print(id)
 
     enter = Enterprise.objects.get(id=id)
 
     files = request.FILES
-    print(files)
+    #print(files)
     if 'businessLicense' in files.keys():
         businessLicense = files['businessLicense']
         enter.businessLicense = businessLicense
@@ -405,7 +422,7 @@ def ent_info_post(request):  # 企业资质信息提交
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
-    # print(request.body)
+    # #print(request.body)
     # req = json.loads(request.body)
     # enterid = req['id']
     # images = request.FILES
@@ -441,7 +458,7 @@ def ent_info_get(request):  # 企业信息获取（企业资料、审核结果�
     #enterid = "1"
     enter = Enterprise.objects.get(id=enterid)
     #img = enter.icon
-    #print(img)
+    ##print(img)
     enter_ser = EnterpriseSerializer(enter)
 
     mydict = {'msg': 'success','result':enter_ser.data}
@@ -458,9 +475,9 @@ def foreman_info_get(request):  # 包工头信息获取(查看自己的个人资
     """
     id = request.GET.get('id')
     # 根据包工头id获取包工头信息序列化（嵌套序列化？）
-    # print(request.body)
+    # #print(request.body)
     # req = json.loads(request.body)
-    # print(req)
+    # #print(req)
     # id = req['id']
     user= Foreman.objects.get(id=id)
     serializer = ForemanSerializer(user)
@@ -477,7 +494,7 @@ def foreman_info_post(request):  # 包工头信息提交
     :return: 成功/失败
     """
     # 包工头信息序列化save
-    print(request.body)
+    #print(request.body)
     req=json.loads(request.body)
     id=req['id']
 
@@ -511,7 +528,7 @@ def foreman_add_group(request): #包工头添加小组
     :param request: 包工头id、小组信息
     :return: 成功/失败
     """
-    print(request.body)
+    #print(request.body)
     req = json.loads(request.body)
     id = req['id'] #包工头id
     type = req['type']
@@ -542,10 +559,11 @@ def forman_show_group(request): #包工头展示小组
     group_list = []
     for group in groups:
         name = group.type + str(group.classNumber)
-        one_group = {"id": group.id, "name": name, "memberNumber": group.memberNumber}
+
+        one_group = {"id": group.id, "name": name, "memberNumber": group.memberNumber,"status":group.authState}
         group_list.append(one_group)
 
-    mydict = {'result': SUCCESS, 'msg': '获取成功','data':group_list}
+    mydict = {'result': SUCCESS, 'msg': '获取成功','data':group_list, }
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 def member_add_pic(request): #添加组员审核照片
@@ -562,22 +580,22 @@ def group_add_member(request): #添加组员
     :param request: 组的id，组员list（身份证、姓名）
     :return:是否成功
     """
-    print(request)
-    print(request.POST)
+    #print(request)
+    #print(request.POST)
     #req = json.loads(request.body)
     #req = request.body
 
 
-    # print(req)
+    # #print(req)
     # id = req['id']  # 组号
     # name = req['name']
     # phonenumber = req['phonenumber']
     # idcard = req['idcard']
 
     id=request.POST.get('id')
-    print(id)
+    #print(id)
     name = request.POST.get('name')
-    print(name)
+    #print(name)
     phonenumber = request.POST.get('phonenumber')
     idcard = request.POST.get('idcard')
     farmer =Farmers.objects.get(id=id)
@@ -586,7 +604,7 @@ def group_add_member(request): #添加组员
 
 
     images = request.FILES
-    print(images)
+    #print(images)
     auth = images['auth']
     #auth = images['auth']
 
@@ -620,9 +638,9 @@ def register_manager(request):  # 新增管理员
     :return: 成功/失败 —— 当前管理员列表？
     """
     if request.method == "POST":
-        print(request.body)
+        #print(request.body)
         req = json.loads(request.body)
-        print(req)
+        #print(req)
         username = req['username']
         password = req['password']
         if Administrator.objects.filter(name=username):  # 已存在
@@ -630,7 +648,7 @@ def register_manager(request):  # 新增管理员
                 msg = "用户名已存在"
                 mydict = {'result': 'false','msg': msg}
                 # return render(request,'login.html',{'msg':'用户名已存在'})
-                print("用户名已存在")
+                #print("用户名已存在")
                 # return render(request,"register",{'data':json.dumps(mydict)})
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
 
@@ -639,7 +657,7 @@ def register_manager(request):  # 新增管理员
                 # userName = username
                 data_dict = {'name': username, 'password': userPassword}
 
-                Administrator.objects.create(name=username,password=password)
+                Administrator.objects.create(name=username,password=userPassword)
 
                 # serializer = AdministratorSerializer(data=data_dict)
                 # serializer.is_valid(raise_exception=True)
@@ -647,7 +665,7 @@ def register_manager(request):  # 新增管理员
                 # messages.success(request, "注册成功")
                 msg = "注册成功"
                 mydict = {'result': 'true','msg': msg}
-                print("注册成功")
+                #print("注册成功")
                 # return render(request,"register",{'data': json.dumps(mydict)})
                 return HttpResponse(json.dumps(mydict), content_type="application/json")
                 # return render(request,'login.html',{'msg':'注册成功'}
@@ -660,8 +678,14 @@ def all_manager(request):  # 获取所有管理员
     :return: 管理员用户列表（id、用户名）
     """
     adminList = Administrator.objects.all()
-    admin_ser = AdministratorSerializer(adminList, many=True)
-    mydict = {'result': SUCCESS, 'msg': '获取成功', 'data': admin_ser.data}
+    #admin_ser = AdministratorSerializer(adminList, many=True)
+    index=0
+    AllAdmin = []
+    for admin in adminList:
+        thisAdmin = {'index':index,'id':admin.id,'name':admin.name}
+        index = index+1
+        AllAdmin.append(thisAdmin)
+    mydict = {'result': SUCCESS, 'msg': '获取成功', 'data': AllAdmin}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 

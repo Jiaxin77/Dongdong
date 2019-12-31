@@ -28,12 +28,12 @@ try:
 
     # 设置定时任务，选择方式为interval，时间间隔为10s
     # 另一种方式为每天固定时间执行任务，对应代码为：
-    # @register_job(scheduler, 'cron', day_of_week='mon-sun', hour='8', minute='01', second='00', id='task_time')
-    @register_job(scheduler,"interval", seconds=10)
+    @register_job(scheduler, 'cron', day_of_week='mon-sun', hour='8', minute='01', second='00', id='task_time')
+    # @register_job(scheduler,"interval", seconds=10)
     def my_job():
         # 这里写你要执行的任务
         # 检测时间
-        print("定时器开始")
+        #print("定时器开始")
         auto_begin_needs()
         pass
 
@@ -41,7 +41,7 @@ try:
     register_events(scheduler)
     scheduler.start()
 except Exception as e:
-    print(e)
+    #print(e)
     # 有错误就停止定时器
     scheduler.shutdown()
 
@@ -55,9 +55,9 @@ def post_needs(request):  # 企业发布需求
 
     # 需求序列化信息存储
     # （暂时不用的匹配）
-    print(request.body)
+    #print(request.body)
     req = json.loads(request.body)
-    print(req)
+    #print(req)
     enterid = req['id']
     req_form = req['parameter']
     #needsDes = req_form['needsDes']
@@ -69,17 +69,19 @@ def post_needs(request):  # 企业发布需求
     needsLocation = req_form['province'] + req_form['centre'] + req_form['local']
     needsEndTime = req_form['buildTime'][1][0:10]
 
-    # remarks = req_form['remarks']
+    remarks = req_form['description']
     enter = Enterprise.objects.get(id=enterid)
 
     data_dict = {"enterId": enter.id, "needsDes": enter.nowProject, "needsFarmerType": needsFarmerType,
                  'needsNum': needsNum, 'price': price, 'needsBeginTime': needsBeginTime, 'needsLocation': needsLocation,
                  'needsEndTime': needsEndTime, 'needsType': "匹配中"}  ###删掉了remarks，des
+    #
+    # serializer = NeedsSerializer(data=data_dict)
+    # serializer.is_valid(raise_exception=True)
+    # serializer.save()  # 数据库新增信息
 
-    serializer = NeedsSerializer(data=data_dict)
-    serializer.is_valid(raise_exception=True)
-    serializer.save()  # 数据库新增信息
-
+    Needs.objects.create(enterId=enter,needsDes=enter.nowProject,needsFarmerType=needsFarmerType,needsNum=needsNum,
+                         price=price,needsBeginTime=needsBeginTime,needsLocation=needsLocation,needsEndTime=needsEndTime,needsType='匹配中',remarks=remarks)
     # 分配需求
 
     mydict = {'result': SUCCESS, 'msg': '需求发布成功！'}
@@ -99,7 +101,7 @@ def get_needs(request):  # 企业查看需求列表
     # enterid = req['id']
     enterid = request.GET.get('id')
     enter = Enterprise.objects.get(id=enterid)
-    allneeds = Needs.objects.all()
+    allneeds = Needs.objects.all().order_by('-needsTime')
     needList = []
     for need in allneeds:
         if need.enterId == enter:  # 获取属于该企业的
@@ -127,7 +129,7 @@ def get_need_info(request):  # 企业查看具体某需求信息
     # 匹配成员信息
     matchResult = need.matchResult.all()
     # matchResult = Needs.objects.filter(matc)
-    print(matchResult)
+    #print(matchResult)
     foremans = Foreman.objects.all()
     for foreman in foremans:
         haveFlag = False
@@ -171,8 +173,8 @@ def get_self_needs(request):  # 农民工获取待接受需求
     farmerTypeList = []
     for farmers in allfarmers:
         farmerTypeList.append(farmers.type)
-    print(farmerTypeList)
-    allneeds = Needs.objects.all()
+    #print(farmerTypeList)
+    allneeds = Needs.objects.all().order_by('-needsTime')
     needsList = []
     for need in allneeds:
         if need.needsType == '匹配中':
@@ -201,13 +203,13 @@ def foreman_get_need(request):  # 包工头获取单个需求，和人员列表
     farmers_list = Farmers.objects.all()
     members = FarmersMember.objects.all()
     for group in farmers_list:
-        # print(group.id)
-        # print(group.ingNeed == None)
-        # print(group.leader_id)
-        # print(group.type == need.needsFarmerType)
-        # print(group.authState == "审核通过")
+        # #print(group.id)
+        # #print(group.ingNeed == None)
+        # #print(group.leader_id)
+        # #print(group.type == need.needsFarmerType)
+        # #print(group.authState == "审核通过")
         if group.ingNeed == None and group.leader_id == foreman.id and group.type == need.needsFarmerType and group.authState == "审核通过":
-            print("有符合需求的")
+            #print("有符合需求的")
             member_list = []
             for member in members:
                 if member.group_id == group.id:
@@ -259,7 +261,7 @@ def deal_needs(request):  # 包工头接受/拒绝需求
     else:
         need.nowNum = need.nowNum + totalnum  # 当前需求已匹配人数
         if need.nowNum == need.needsNum:
-            need.needsType = "匹配成功"
+            need.needsType = "匹配完成待支付"
         for groupid in groupid_list:
             group = Farmers.objects.get(id=groupid)
             group.ingNeed = need
@@ -289,23 +291,34 @@ def begin_needs(request):  # 企业开始需求（提前开工）
     req = json.loads(request.body)
     id = req['id']  # 需求id
     need = Needs.objects.get(id=id)
-    need.needsType = "匹配完成待支付"
-    need.save()
-    # 创建订单
-    print(need.matchResult.all())
-    for group in need.matchResult.all():
-        orderid = create_order_id(need.id, group.id)
-        money = need.price * (group.memberNumber / need.needsNum)
-        print(money)
-        #####未写完
-        Order.objects.create(id=orderid, money=money,
-                             moneyToFarmers=money * (1 - price_to_app), moneyToApp=money * price_to_app, needId=need,
-                             status="交易中")
-        order = Order.objects.get(id=orderid)
-        order.farmers.add(group)
-        order.save()
-    mydict = {'result':SUCCESS,'msg': '成功开工！'}
-    return HttpResponse(json.dumps(mydict), content_type="application/json")
+    if need.needsType == "匹配完成待支付":
+        need.needsType = "匹配完成待支付"
+        need.save()
+        # 创建订单
+        ##print(need.matchResult.all())
+        for group in need.matchResult.all():
+            orderid = create_order_id(need.id, group.id)
+            money = need.price * (group.memberNumber / need.needsNum)
+            ##print(money)
+            #####未写完
+            Order.objects.create(id=orderid, money=round(money,2),
+                                moneyToFarmers=round(money * (1 - price_to_app),2), moneyToApp=round(money * price_to_app,2), needId=need,
+                                status="交易中")
+            order = Order.objects.get(id=orderid)
+            order.farmers.add(group)
+            order.save()
+        mydict = {'result':SUCCESS,'msg': '成功开工！'}
+        return HttpResponse(json.dumps(mydict), content_type="application/json")
+    else:
+        need.needsType = "匹配失败"
+        need.save()
+        for farmer in Farmers.objects.all():
+            if farmer.ingNeed == need:
+                farmer.ingNeed = None
+                farmer.save()
+        mydict = {'result': ERROR, 'msg': '匹配失败！'}
+        return HttpResponse(json.dumps(mydict), content_type="application/json")
+
 
 
 def auto_begin_needs():  # 自动开始需求（根据系统时间）
@@ -316,44 +329,55 @@ def auto_begin_needs():  # 自动开始需求（根据系统时间）
     # 定期检测调用此函数
     # 置需求状态
     # 新增到此需求对应各个包工头的订单
-    needs = Needs.objects.all()
+    needs = Needs.objects.all().order_by('-needsTime')
     for need in needs:
         beginTime = need.needsBeginTime
         # today = datetime.date.today()
         # nowTime_str = datetime.
         nowTime_str = timezone.now().strftime('%Y-%m-%d')
-        print(nowTime_str)
+        #print(nowTime_str)
         e_time = time.mktime(time.strptime(nowTime_str, "%Y-%m-%d"))
-        print(e_time)
+        #print(e_time)
         try:
-            print(beginTime)
+            #print(beginTime)
             s_time = time.mktime(time.strptime(str(beginTime), '%Y-%m-%d'))
-            print(s_time)
+            #print(s_time)
             # 日期转化为int比较
             diff = int(s_time) - int(e_time)
-            print(diff)
+            #print(diff)
             if diff <= 0:
 
-                if need.needsNum <= need.nowNum:  # 开工！
-                    print("到时间了！需求" + need.needsDes + "已经开始！")
+                if need.needsNum <= need.nowNum and  need.needsType != "交易成功":  # 开工！
+                    #print("到时间了！需求" + need.needsDes + "已经开始！")
                     need.needsType = "匹配完成待支付"
                     need.save()
                     # 创建订单
-                    print(Needs.objects.get(id=need.id).matchResult.all())
-                    print(need.matchResult.all())
-                    for group in Needs.objects.get(id=need.id).matchResult.all():
+                    #print(Needs.objects.get(id=need.id).matchResult.all())
+                    #print(need.matchResult.all())
+                    for group in need.matchResult.all():
                         orderid = create_order_id(need.id, group.id)
-                        money = need.price*(group.memberNumber/need.needsNum)
+                        money = need.price * (group.memberNumber / need.needsNum)
+                        ##print(money)
                         #####未写完
-                        Order.objects.create(id=orderid,entid=need.enterId, farmers=group, money=money,moneyToFarmers=money*(1-price_to_app),moneyToApp=money*price_to_app,needId=need,status="交易中")
+                        Order.objects.create(id=orderid, money=round(money, 2),
+                                            moneyToFarmers=round(money * (1 - price_to_app), 2),
+                                            moneyToApp=round(money * price_to_app, 2), needId=need,
+                                            status="交易中")
+                        order = Order.objects.get(id=orderid)
+                        order.farmers.add(group)
+                        order.save()
                 else:  # 未匹配成功
                     need.needsType = "匹配失败"
                     need.save()
-                    print("到时间了！需求" + need.needsDes + "匹配失败！")
+                    for farmer in Farmers.objects.all():
+                        if farmer.ingNeed == need:
+                            farmer.ingNeed = None
+                            farmer.save()
+                    #print("到时间了！需求" + need.needsDes + "匹配失败！")
 
 
         except Exception as e:
-            print(e)
+            #print(e)
             return 0
 
 
@@ -393,7 +417,7 @@ def get_all_needs(requests):  # 获取所有需求列表——管理员用
     GET
     :return: 需求列表序列化信息
     """
-    needs = Needs.objects.all()
+    needs = Needs.objects.all().order_by("-needsTime")
     needs_ser = NeedsSerializer(needs, many=True)
     mydict = {'result': SUCCESS, 'msg': '成功获取！','data':needs_ser.data}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
