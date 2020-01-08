@@ -7,7 +7,7 @@ from needs.models import Needs
 from needs.serializer import NeedsSerializer
 
 from order.models import Order
-from order.views import create_order_id, price_to_app
+from order.views import create_order_id, price_to_app, price_total
 
 from user.models import Enterprise, Foreman, Farmers, FarmersMember
 import time
@@ -101,7 +101,7 @@ def get_needs(request):  # 企业查看需求列表
     # enterid = req['id']
     enterid = request.GET.get('id')
     enter = Enterprise.objects.get(id=enterid)
-    allneeds = Needs.objects.all().order_by('-needsTime')
+    allneeds = Needs.objects.all().order_by('-id')
     needList = []
     for need in allneeds:
         if need.enterId == enter:  # 获取属于该企业的
@@ -269,7 +269,18 @@ def deal_needs(request):  # 包工头接受/拒绝需求
             need.matchResult.add(group)  # 多对多字段
         need.save()
         # 此时产生订单？
-
+        # for group in need.matchResult.all():
+        # for group in need.matchResult.all():
+        #     orderid = create_order_id(need.id, group.id)
+        #     money = need.price * (group.memberNumber / need.needsNum)
+        #     ##print(money)
+        #
+        #     Order.objects.create(id=orderid, money=round(money,2),
+        #                         moneyToFarmers=round(money * (1 - price_to_app),2), moneyToApp=round(money * price_to_app,2), needId=need,
+        #                         status="交易中")
+        #     order = Order.objects.get(id=orderid)
+        #     order.farmers.add(group)
+        #     order.save()
     mydict = {'result': SUCCESS, 'msg': '已成功接受需求'}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
@@ -298,11 +309,10 @@ def begin_needs(request):  # 企业开始需求（提前开工）
         ##print(need.matchResult.all())
         for group in need.matchResult.all():
             orderid = create_order_id(need.id, group.id)
+            #money = need.price * (group.memberNumber / need.needsNum)
             money = need.price * (group.memberNumber / need.needsNum)
-            ##print(money)
-            #####未写完
             Order.objects.create(id=orderid, money=round(money,2),
-                                moneyToFarmers=round(money * (1 - price_to_app),2), moneyToApp=round(money * price_to_app,2), needId=need,
+                                moneyToFarmers=round(money ,2), moneyToApp=0, needId=need,
                                 status="交易中")
             order = Order.objects.get(id=orderid)
             order.farmers.add(group)
@@ -351,21 +361,23 @@ def auto_begin_needs():  # 自动开始需求（根据系统时间）
                     #print("到时间了！需求" + need.needsDes + "已经开始！")
                     need.needsType = "匹配完成待支付"
                     need.save()
+                    order = Order.objects.filter(needId=need)
+
                     # 创建订单
                     #print(Needs.objects.get(id=need.id).matchResult.all())
                     #print(need.matchResult.all())
-                    for group in need.matchResult.all():
-                        orderid = create_order_id(need.id, group.id)
-                        money = need.price * (group.memberNumber / need.needsNum)
-                        ##print(money)
-                        #####未写完
-                        Order.objects.create(id=orderid, money=round(money, 2),
-                                            moneyToFarmers=round(money * (1 - price_to_app), 2),
-                                            moneyToApp=round(money * price_to_app, 2), needId=need,
-                                            status="交易中")
-                        order = Order.objects.get(id=orderid)
-                        order.farmers.add(group)
-                        order.save()
+                    if (order == None): #不存在订单 -- 没执行过
+                        for group in need.matchResult.all():
+                            orderid = create_order_id(need.id, group.id)
+                            money = need.price * (group.memberNumber / need.needsNum)
+                            Order.objects.create(id=orderid, money=round(money, 2),
+                                                 moneyToFarmers=round(money, 2), moneyToApp=0, needId=need,
+                                                 status="交易中")
+                            order = Order.objects.get(id=orderid)
+                            order.farmers.add(group)
+                            order.save()
+                    else: #存在订单 已经执行过了
+                        need.save()
                 else:  # 未匹配成功
                     need.needsType = "匹配失败"
                     need.save()
@@ -417,7 +429,7 @@ def get_all_needs(requests):  # 获取所有需求列表——管理员用
     GET
     :return: 需求列表序列化信息
     """
-    needs = Needs.objects.all().order_by("-needsTime")
+    needs = Needs.objects.all().order_by("-id")
     needs_ser = NeedsSerializer(needs, many=True)
     mydict = {'result': SUCCESS, 'msg': '成功获取！','data':needs_ser.data}
     return HttpResponse(json.dumps(mydict), content_type="application/json")

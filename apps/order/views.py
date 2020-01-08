@@ -21,7 +21,7 @@ from user.models import FarmersMember
 from user.serializer import FarmersMemberSerializer, FarmersSerializer
 
 price_to_app = 0.2
-
+price_total = 1.0972
 
 # 订单id生成
 def create_order_id(needid, userid):
@@ -92,6 +92,9 @@ def get_orders(request):  # 获取需求对应订单!!!!!!【！！！】
     allMoney = 0
     allMoneyToFarmers = 0
     allMoneyToApp = 0
+    allMoneyNum = 0
+    allMoneyToFarmersNum = 0
+    allMoneyToAppNum = 0
     orderList = []
     for order in orders:
         group = order.farmers.get(order=order)
@@ -102,7 +105,10 @@ def get_orders(request):  # 获取需求对应订单!!!!!!【！！！】
         allMoneyToFarmers=allMoneyToFarmers+round(order.moneyToFarmers,2)
         allMoneyToApp=allMoneyToApp+round(order.moneyToApp,2)
         orderList.append(thisOrder)
-    mydict = {'result': SUCCESS,'msg':'成功获取','data':orderList,'allMoney':allMoney,'allMoneyToFarmers':allMoneyToFarmers,'allMoneyToApp':allMoneyToApp}
+    allMoneyNum = allMoney * price_total
+    allMoneyToAppNum = allMoney *(price_total - 1)
+    allMoneyToFarmersNum = allMoney * 1
+    mydict = {'result': SUCCESS,'msg':'成功获取','data':orderList,'allMoney':round(allMoneyNum,2),'allMoneyToFarmers':round(allMoneyToFarmersNum,2),'allMoneyToApp':round(allMoneyToAppNum,2)}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
@@ -214,8 +220,10 @@ def get_need_orders(request): #获取按需求的订单信息列表
             order_count = order_count+1
             if order.status == "交易中":
                 orderFlag = "待支付"
-
-        thisNeed = {'id':need.id,'enterName':need.enterId.enterName,'needDes':need.needsDes,'needsFarmerType':need.needsFarmerType,'needsType':need.needsType,'orderNum':ordernum,'orderMoney':round(orderMoney,2),'orderMoneyToApp':round(orderMoneytoApp,2),'orderMoneyToFarmers':round(orderMoneytoFarmers,2),'needsPayStatus':orderFlag}
+        orderMoneyNum = orderMoney * price_total
+        orderMoneyToAppNum = orderMoney * (price_total - 1)
+        orderMoneyToFarmersNum = orderMoney * 1
+        thisNeed = {'id':need.id,'enterName':need.enterId.enterName,'needDes':need.needsDes,'needsFarmerType':need.needsFarmerType,'needsType':need.needsType,'orderNum':ordernum,'orderMoney':round(orderMoneyNum,2),'orderMoneyToApp':round(orderMoneyToAppNum,2),'orderMoneyToFarmers':round(orderMoneyToFarmersNum,2),'needsPayStatus':orderFlag}
         if need.needsType == "匹配完成待支付" or need.needsType == "交易成功":
             needsList.append(thisNeed)
 
