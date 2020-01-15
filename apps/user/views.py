@@ -57,7 +57,6 @@ def register(request):
         status = req['user_type']  # ent/man/far
 
         if status == "ent":  # 来自web端的数据  ——————企业
-
             if Enterprise.objects.filter(name=username):  # 已存在
                 messages.error(request, "用户名已存在")
                 msg = "用户名已存在"
