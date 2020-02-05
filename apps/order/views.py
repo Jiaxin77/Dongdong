@@ -12,6 +12,17 @@ from needs.models import Needs
 from order.models import Order
 from order.serializer import OrderSerializer
 import time
+import reportlab
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Image
+
+from reportlab.platypus import SimpleDocTemplate, Image, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.units import mm, inch
+
+pdfmetrics.registerFont(TTFont('SimSun', 'SimSun.ttf'))  #注册字体
 
 # Create your views here.
 
@@ -228,4 +239,95 @@ def get_need_orders(request): #获取按需求的订单信息列表
             needsList.append(thisNeed)
 
     mydict = {'result': SUCCESS, 'msg': '成功获取！', 'data': needsList,'orderData':orderList}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
+
+
+
+
+#咚咚和公司的 【需求id获取，返回文件路径】
+#def getComAndDongContract()
+
+#咚咚和农民工 【需求id和农民工id获取。返回文件路径】
+
+
+
+def getContract(request): #生成合同
+    #response = HttpResponse(content_type='application/pdf')
+    #response['Content-Disposition'] = 'attachment; filename="./media/contract/enterAndDong/somefilename.pdf"'
+
+    pdf_path = "./media/contract/enterAndDong/somefilename.pdf"
+    Style = getSampleStyleSheet()
+    reportlab.lib.styles.ParagraphStyle.defaults['wordWrap'] = 'CJK'
+    title_style = Style['Normal']
+    title_style.fontSize=14
+    title_style.fontName='SimSun'
+    title_style.wordWrap = 'CJK'
+    title_style.leading = 20
+    title_style.alignment = 1
+
+    text_style = Style['Normal']
+    text_style.fontSize=12
+    text_style. fontName = 'SimSun'
+    text_style.alignment = 1
+
+
+    p = canvas.Canvas(pdf_path)
+    p.setFont('SimSun', 12)
+    content=[]
+    #p.drawString(100,700,"咚咚点兵已匹配完成待支付需求简式合同")
+    titleContent= '<para align=center fontSize=21 autoLeading="off">咚咚点兵已匹配完成待支付需求简式合同</para>'
+    title = Paragraph(titleContent,title_style)
+    #content.append(title)
+    title.wrapOn(p, 8 * inch, 8 * inch)
+    title.drawOn(p,5,10 * inch)
+    #第一个数字 横向，第二个数字纵向
+    company="河南北方城建有限公司"
+    applyCompany="咚咚点兵"
+    location="安阳新都现代城商住小区二期"
+    groups="其他5组"
+    buycontent="哈哈哈"
+    money="1234"
+    paytime="2020-02-03"
+    availtime="2020-02-05"
+
+
+    text="<para align=left leftIndent=100 leading=30> 注册账户/采购单位：    "+company+\
+         "<br/> 供应单位：    "+applyCompany+ \
+         "<br/> 交易地点：    "+location+\
+         "<br/> 已匹配班组：   "+groups+\
+         "<br/> 采购内容/班组价款：   "+buycontent+\
+         "<br/> 交易金额：    "+money+\
+         "<br/> 质量控制：    "+"由本施工企业现场管理人员监督负责"+\
+         "<br/> 支付时间：    "+paytime+\
+         "<br/> 合同生成时间：  "+availtime+"</para>"
+
+    textContent = Paragraph(text,text_style)
+    textContent.wrapOn(p, 6 * inch, 5 * inch)
+    textContent.drawOn(p,3,5 * inch)
+   # textContent.drawOn(p)
+
+    partyA = "郑州咚咚点兵信息技术有限公司"
+    partyB = company
+    textPA = "<para align=left leftIndent=100>甲方：郑州咚咚点兵信息技术有限公司</para>"
+    textPB = "<para align=left leftindent=320>乙方："+partyB+"</para>"
+    PPA = Paragraph(textPA,text_style)
+    PPB = Paragraph(textPB,text_style)
+    PPA.wrapOn(p,7*inch,5*inch)
+    PPA.drawOn(p,3,2*inch)
+    PPB.wrapOn(p, 7 * inch, 5 * inch)
+    PPB.drawOn(p, 7, 2 * inch)
+    #公章
+    img=Image("./static/pic/timg.png")
+    img_url = "./static/pic/timg.png"
+    #img=Image("https://www.dddianbing.com/pic/timg.png")
+    #img_url = "https://www.dddianbing.com/pic/timg.png"
+    # img.drawHeight=50
+    # img.drawWidth=50
+
+
+    p.drawImage(img_url,110,2*inch,100,100,'auto')
+    p.showPage()
+    p.save()
+
+    mydict = {'result': SUCCESS, 'msg': '获取成功！'}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
