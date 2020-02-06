@@ -28,7 +28,7 @@ pdfmetrics.registerFont(TTFont('SimSun', 'SimSun.ttf'))  #注册字体
 
 # 金额分配比例
 # 给app的
-from user.models import FarmersMember
+from user.models import FarmersMember, Farmers
 from user.serializer import FarmersMemberSerializer, FarmersSerializer
 
 price_to_app = 0.2
@@ -242,20 +242,82 @@ def get_need_orders(request): #获取按需求的订单信息列表
     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
+#合同确认（农民工端）
+def postFarmerContractConfirm(request):
+    req = json.loads(request.body)
+    needid = req['needid']
+    groupid = req['groupid']
+    group = Farmers.objects.get(id=groupid)
+    group.contractType = 1
+    group.save()
+    mydict = {'result': SUCCESS, 'msg': '确认成功'}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
+
+#合同确认（企业端）
+def postEnterContractConfirm(request):
+    req = json.loads(request.body)
+    needid = req['needid']
+    need = Needs.objects.get(id=needid)
+    need.contractType = 1
+    need.save()
+    mydict = {'result': SUCCESS, 'msg': '确认成功'}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
-#咚咚和公司的 【需求id获取，返回文件路径】
-#def getComAndDongContract()
+#咚咚和公司的销售合同 【需求id获取，返回文件路径】
+def getComAndDongContract(request):
+    id = request.GET.get("needid")  # 需求id
+    need = Needs.objects.get(id=id)
+    pdf_path="./media/contract/enterAndDong/"+"Con"+id+".pdf"
+    successFlag = False
+    if(need.needsType == "匹配完成待支付"):
+        #好像不能在这儿生成合同？要在匹配完成待支付时生成合同？不然合同时间不对？
+        company = need.enterId.enterName
+        location = need.needsLocation
+        groups=""
+        for group in need.matchResult.all():
+            groups = groups+group.type + str(group.classNumber) + "(" + group.leader.name + "工长)    "
+        payTime = str(need.needsEndTime)
+        contractTime = str(need.contractTime)
+
+        successFlag = getContract(pdf_path,company,location,groups,payTime,contractTime)
+        status = need.contractType #0为未确认，1为已确认
+    if(successFlag == True):
+        mydict = {'result': SUCCESS, 'msg': '获取成功！','path':pdf_path,'status':status}
+    else:
+        mydict = {'result': ERROR, 'msg': '获取失败！'}
+
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
+
 
 #咚咚和农民工 【需求id和农民工id获取。返回文件路径】
+def getFarmerAndDongContract(request):
+    needid = request.GET.get("needid")
+    need = Needs.objects.get(id=needid)
+    groupid = request.GET.get("groupid")
+    group = Farmers.objects.get(id=groupid)
+    pdf_path = "./media/contract/famAndDong/"+"Con"+needid+"_"+groupid+".pdf"
+    successFlag = False
+    if (need.needsType == "匹配完成待支付"):
+        company = need.enterId.enterName
+        location = need.needsLocation
+        groupName = group.type+str(group.classNumber)+"("+group.leader.name+"工长)"
+        payTime = str(need.needsEndTime)
+        contractTime = str(need.contractTime)
 
+        successFlag = getContract(pdf_path,company,location,groupName,payTime,contractTime)
+        status = group.contractType  # 0为未确认，1为已确认
+    if (successFlag == True):
+        mydict = {'result': SUCCESS, 'msg': '获取成功！', 'path': pdf_path,'status':status}
+    else:
+        mydict = {'result': ERROR, 'msg': '获取失败！'}
+    return HttpResponse(json.dumps(mydict), content_type="application/json")
 
-
-def getContract(request): #生成合同
+def getContract(PDF_path,company,location,group,payTime,contractTime): #生成合同
     #response = HttpResponse(content_type='application/pdf')
     #response['Content-Disposition'] = 'attachment; filename="./media/contract/enterAndDong/somefilename.pdf"'
 
-    pdf_path = "./media/contract/enterAndDong/somefilename.pdf"
+    pdf_path = PDF_path
     Style = getSampleStyleSheet()
     reportlab.lib.styles.ParagraphStyle.defaults['wordWrap'] = 'CJK'
     title_style = Style['Normal']
@@ -281,28 +343,28 @@ def getContract(request): #生成合同
     title.wrapOn(p, 8 * inch, 8 * inch)
     title.drawOn(p,5,10 * inch)
     #第一个数字 横向，第二个数字纵向
-    company="河南北方城建有限公司"
+    company=company
     applyCompany="咚咚点兵"
-    location="安阳新都现代城商住小区二期"
-    groups="其他5组"
-    buycontent="哈哈哈"
+    location=location
+    groups=group
+    buycontent="哈哈哈哈"
     money="1234"
-    paytime="2020-02-03"
-    availtime="2020-02-05"
+    paytime=payTime
+    availtime=contractTime
 
 
-    text="<para align=left leftIndent=100 leading=30> 注册账户/采购单位：    "+company+\
-         "<br/> 供应单位：    "+applyCompany+ \
-         "<br/> 交易地点：    "+location+\
-         "<br/> 已匹配班组：   "+groups+\
-         "<br/> 采购内容/班组价款：   "+buycontent+\
-         "<br/> 交易金额：    "+money+\
-         "<br/> 质量控制：    "+"由本施工企业现场管理人员监督负责"+\
-         "<br/> 支付时间：    "+paytime+\
-         "<br/> 合同生成时间：  "+availtime+"</para>"
+    text="<para align=left leftIndent=100 leading=30>注册账户/采购单位：    "+company+\
+         "<br/>供应单位：    "+applyCompany+ \
+         "<br/>交易地点：    "+location+\
+         "<br/>已匹配班组：   "+groups+\
+         "<br/>采购内容/班组价款：   "+buycontent+\
+         "<br/>交易金额：    "+money+\
+         "<br/>质量控制：    "+"由本施工企业现场管理人员监督负责"+\
+         "<br/>支付时间：    "+paytime+\
+         "<br/>合同生成时间：  "+availtime+"</para>"
 
     textContent = Paragraph(text,text_style)
-    textContent.wrapOn(p, 6 * inch, 5 * inch)
+    textContent.wrapOn(p, 7 * inch, 5 * inch)
     textContent.drawOn(p,3,5 * inch)
    # textContent.drawOn(p)
 
@@ -329,5 +391,9 @@ def getContract(request): #生成合同
     p.showPage()
     p.save()
 
-    mydict = {'result': SUCCESS, 'msg': '获取成功！'}
-    return HttpResponse(json.dumps(mydict), content_type="application/json")
+    return True
+    #
+    # mydict = {'result': SUCCESS, 'msg': '获取成功！'}
+    # return HttpResponse(json.dumps(mydict), content_type="application/json")
+
+

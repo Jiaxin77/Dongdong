@@ -12,5 +12,9 @@ urlpatterns = [
     path('getOrderInfo',views.get_order_info, name='getOrderInfo'),
     path('getAllOrders',views.get_all_orders,name='getAllOrders'),
     path('getNeedOrders',views.get_need_orders,name='getNeedOrders'),
-    path('getContract', views.getContract, name='getContract')
+    path('getComAndDongContract', views.getComAndDongContract, name='getComAndDongContract'),
+    path('getFarmerAndDongContract',views.getFarmerAndDongContract,name='getFarmerAndDongContract'),
+    path('postFarmerContractConfirm',views.postFarmerContractConfirm,name='postFarmerContractConfirm'),
+    path('postEnterContractConfirm',views.postEnterContractConfirm,name='postFarmerContractConfirm')
+
 ]

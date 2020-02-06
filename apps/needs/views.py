@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.messages import SUCCESS, ERROR
 from django.http import HttpResponse
 import json
@@ -262,6 +264,7 @@ def deal_needs(request):  # 包工头接受/拒绝需求
         need.nowNum = need.nowNum + totalnum  # 当前需求已匹配人数
         if need.nowNum == need.needsNum:
             need.needsType = "匹配完成待支付"
+            need.contractTime = datetime.datetime.now().strftime('%Y年%月-%日')
         for groupid in groupid_list:
             group = Farmers.objects.get(id=groupid)
             group.ingNeed = need

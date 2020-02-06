@@ -33,4 +33,6 @@ class Needs(models.Model):
     needsEndTime = models.DateField(null=True, verbose_name="截止时间")
     remarks = models.CharField(max_length=2000, null=True,verbose_name="备注")
     needsType = models.CharField(max_length=200,default="未设置", verbose_name="需求状态")
+    contractTime = models.DateField(null=True,verbose_name="合同生成时间")
+    contractType = models.IntegerField(default=0,null=True,verbose_name="合同是否确认") #
 

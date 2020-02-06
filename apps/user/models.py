@@ -77,6 +77,7 @@ class Farmers(models.Model):
     leader = models.ForeignKey("Foreman",on_delete=models.SET_NULL, verbose_name="所属包工头",null=True)
     ingNeed = models.ForeignKey("needs.Needs", on_delete=models.SET_NULL, verbose_name="进行中需求",null=True)  # 正在做的需求
     authState = models.CharField(max_length=2000,default="审核中",verbose_name="审核状态") #审核未通过、审核中、审核已通过
+    contractType = models.IntegerField(default=0,verbose_name="合同状态")
     #completedNeed = models.CharField(max_length=500, null=True, verbose_name="已完成需求")
 
     #completedNeed = models.ManyToManyField("needs.Needs") # 已完成的需求(多对多) --按组的话不需要，但是存在组内有人未完成吗
