@@ -270,7 +270,7 @@ def getComAndDongContract(request):
     need = Needs.objects.get(id=id)
     pdf_path="./media/contract/enterAndDong/"+"Con"+id+".pdf"
     successFlag = False
-    if(need.needsType == "匹配完成待支付"):
+    if(need.needsType == "匹配完成待支付" or need.needsType == "交易成功"):
         #好像不能在这儿生成合同？要在匹配完成待支付时生成合同？不然合同时间不对？
         company = need.enterId.enterName
         location = need.needsLocation
@@ -283,7 +283,8 @@ def getComAndDongContract(request):
         successFlag = getContract(pdf_path,company,location,groups,payTime,contractTime)
         status = need.contractType #0为未确认，1为已确认
     if(successFlag == True):
-        mydict = {'result': SUCCESS, 'msg': '获取成功！','path':pdf_path,'status':status}
+        mypath = pdf_path[1:]
+        mydict = {'result': SUCCESS, 'msg': '获取成功！','path':mypath,'status':status}
     else:
         mydict = {'result': ERROR, 'msg': '获取失败！'}
 
@@ -298,7 +299,7 @@ def getFarmerAndDongContract(request):
     group = Farmers.objects.get(id=groupid)
     pdf_path = "./media/contract/famAndDong/"+"Con"+needid+"_"+groupid+".pdf"
     successFlag = False
-    if (need.needsType == "匹配完成待支付"):
+    if (need.needsType == "匹配完成待支付" or need.needsType == "交易成功"):
         company = need.enterId.enterName
         location = need.needsLocation
         groupName = group.type+str(group.classNumber)+"("+group.leader.name+"工长)"
@@ -308,10 +309,15 @@ def getFarmerAndDongContract(request):
         successFlag = getContract(pdf_path,company,location,groupName,payTime,contractTime)
         status = group.contractType  # 0为未确认，1为已确认
     if (successFlag == True):
-        mydict = {'result': SUCCESS, 'msg': '获取成功！', 'path': pdf_path,'status':status}
+        mypath = pdf_path[1:]
+        mydict = {'result': SUCCESS, 'msg': '获取成功！', 'path': mypath,'status':status}
     else:
         mydict = {'result': ERROR, 'msg': '获取失败！'}
     return HttpResponse(json.dumps(mydict), content_type="application/json")
+
+
+
+
 
 def getContract(PDF_path,company,location,group,payTime,contractTime): #生成合同
     #response = HttpResponse(content_type='application/pdf')
@@ -353,7 +359,7 @@ def getContract(PDF_path,company,location,group,payTime,contractTime): #生成�
     availtime=contractTime
 
 
-    text="<para align=left leftIndent=100 leading=30>注册账户/采购单位：    "+company+\
+    textContent="<para align=left leftIndent=100 leading=30>注册账户/采购单位：    "+company+\
          "<br/>供应单位：    "+applyCompany+ \
          "<br/>交易地点：    "+location+\
          "<br/>已匹配班组：   "+groups+\
@@ -363,9 +369,11 @@ def getContract(PDF_path,company,location,group,payTime,contractTime): #生成�
          "<br/>支付时间：    "+paytime+\
          "<br/>合同生成时间：  "+availtime+"</para>"
 
-    textContent = Paragraph(text,text_style)
-    textContent.wrapOn(p, 7 * inch, 5 * inch)
-    textContent.drawOn(p,3,5 * inch)
+    text = Paragraph(textContent,text_style)
+    text.wrapOn(p, 7 * inch, 5 * inch)
+    text.drawOn(p, 3, 5 * inch)
+
+
    # textContent.drawOn(p)
 
     partyA = "郑州咚咚点兵信息技术有限公司"
@@ -374,8 +382,8 @@ def getContract(PDF_path,company,location,group,payTime,contractTime): #生成�
     textPB = "<para align=left leftindent=320>乙方："+partyB+"</para>"
     PPA = Paragraph(textPA,text_style)
     PPB = Paragraph(textPB,text_style)
-    PPA.wrapOn(p,7*inch,5*inch)
-    PPA.drawOn(p,3,2*inch)
+    PPA.wrapOn(p,7 * inch,5 * inch)
+    PPA.drawOn(p, 3,2 * inch)
     PPB.wrapOn(p, 7 * inch, 5 * inch)
     PPB.drawOn(p, 7, 2 * inch)
     #公章

@@ -30,8 +30,9 @@ try:
 
     # 设置定时任务，选择方式为interval，时间间隔为10s
     # 另一种方式为每天固定时间执行任务，对应代码为：
-    @register_job(scheduler, 'cron', day_of_week='mon-sun', hour='8', minute='01', second='00', id='task_time')
-    # @register_job(scheduler,"interval", seconds=10)
+    @register_job(scheduler, 'cron', day_of_week='mon-sun', hour='1', minute='01', second='00', id='task_time')
+    #@register_job(scheduler,"interval", minutes=5)
+
     def my_job():
         # 这里写你要执行的任务
         # 检测时间
@@ -264,7 +265,7 @@ def deal_needs(request):  # 包工头接受/拒绝需求
         need.nowNum = need.nowNum + totalnum  # 当前需求已匹配人数
         if need.nowNum == need.needsNum:
             need.needsType = "匹配完成待支付"
-            need.contractTime = datetime.datetime.now().strftime('%Y年%月-%日')
+            need.contractTime = datetime.datetime.now().strftime('%Y-%m-%d')
         for groupid in groupid_list:
             group = Farmers.objects.get(id=groupid)
             group.ingNeed = need
@@ -301,36 +302,88 @@ def begin_needs(request):  # 企业开始需求（提前开工）
     # 查找对应需求id
     # 置需求状态
     # 新增到此需求对应各个包工头的订单
+    flag1=0
+    flag2=0
 
     req = json.loads(request.body)
     id = req['id']  # 需求id
     need = Needs.objects.get(id=id)
-    if need.needsType == "匹配完成待支付":
-        need.needsType = "匹配完成待支付"
-        need.save()
-        # 创建订单
-        ##print(need.matchResult.all())
-        for group in need.matchResult.all():
-            orderid = create_order_id(need.id, group.id)
-            #money = need.price * (group.memberNumber / need.needsNum)
-            money = need.price * (group.memberNumber / need.needsNum)
-            Order.objects.create(id=orderid, money=round(money,2),
-                                moneyToFarmers=round(money ,2), moneyToApp=0, needId=need,
-                                status="交易中")
-            order = Order.objects.get(id=orderid)
-            order.farmers.add(group)
-            order.save()
+    beginTime = need.needsBeginTime
+    nowTime_str = timezone.now().strftime('%Y-%m-%d')
+    e_time = time.mktime(time.strptime(nowTime_str, "%Y-%m-%d"))
+
+    # print(beginTime)
+    s_time = time.mktime(time.strptime(str(beginTime), '%Y-%m-%d'))
+    # print(s_time)
+    # 日期转化为int比较
+    diff = int(s_time) - int(e_time)
+    # print(diff)
+    if diff <= 0:
+
+        if need.needsNum <= need.nowNum and need.needsType != "交易成功":  # 开工！
+                # print("到时间了！需求" + need.needsDes + "已经开始！")
+                need.needsType = "匹配完成待支付"
+                need.save()
+                order = Order.objects.filter(needId=need)
+                flag1=1
+                # 创建订单
+                # print(Needs.objects.get(id=need.id).matchResult.all())
+                # print(need.matchResult.all())
+                if (order.count() == 0):  # 不存在订单 -- 没执行过
+                    for group in need.matchResult.all():
+                        orderid = create_order_id(need.id, group.id)
+                        money = need.price * (group.memberNumber / need.needsNum)
+                        Order.objects.create(id=orderid, money=round(money, 2),
+                                             moneyToFarmers=round(money, 2), moneyToApp=0, needId=need,
+                                             status="交易中")
+                        order = Order.objects.get(id=orderid)
+                        order.farmers.add(group)
+                        order.save()
+                        flag2=1
+                else:  # 存在订单 已经执行过了
+                    need.save()
+                mydict = {'result': SUCCESS, 'msg': '成功开工！','flag1':flag1,'flag2':flag2}
+                return HttpResponse(json.dumps(mydict), content_type="application/json")
+        else:  # 未匹配成功
+                need.needsType = "匹配失败"
+                need.save()
+                for farmer in Farmers.objects.all():
+                    if farmer.ingNeed == need:
+                        farmer.ingNeed = None
+                        farmer.save()
+                # print("到时间了！需求" + need.needsDes + "匹配失败！")
+                mydict = {'result': ERROR, 'msg': '匹配失败！'}
+                return HttpResponse(json.dumps(mydict), content_type="application/json")
+
+    #except Exception as e:
+        # print(e)
+        #return 0
+    # if need.needsType == "匹配完成待支付":
+    #     need.needsType = "匹配完成待支付"
+    #     need.save()
+    #     # 创建订单
+    #     ##print(need.matchResult.all())
+    #     for group in need.matchResult.all():
+    #         orderid = create_order_id(need.id, group.id)
+    #         #money = need.price * (group.memberNumber / need.needsNum)
+    #         money = need.price * (group.memberNumber / need.needsNum)
+    #         Order.objects.create(id=orderid, money=round(money,2),
+    #                             moneyToFarmers=round(money ,2), moneyToApp=0, needId=need,
+    #                             status="交易中")
+    #         order = Order.objects.get(id=orderid)
+    #         order.farmers.add(group)
+    #         order.save()
         mydict = {'result':SUCCESS,'msg': '成功开工！'}
         return HttpResponse(json.dumps(mydict), content_type="application/json")
-    else:
-        need.needsType = "匹配失败"
-        need.save()
-        for farmer in Farmers.objects.all():
-            if farmer.ingNeed == need:
-                farmer.ingNeed = None
-                farmer.save()
-        mydict = {'result': ERROR, 'msg': '匹配失败！'}
-        return HttpResponse(json.dumps(mydict), content_type="application/json")
+    # else:
+    #     need.needsType = "匹配失败"
+    #     need.save()
+    #     for farmer in Farmers.objects.all():
+    #         if farmer.ingNeed == need:
+    #             farmer.ingNeed = None
+    #             farmer.save()
+    #     mydict = {'result': ERROR, 'msg': '匹配失败！'}
+    #     return HttpResponse(json.dumps(mydict), content_type="application/json")
 
 
 
@@ -351,49 +404,41 @@ def auto_begin_needs():  # 自动开始需求（根据系统时间）
         #print(nowTime_str)
         e_time = time.mktime(time.strptime(nowTime_str, "%Y-%m-%d"))
         #print(e_time)
-        try:
-            #print(beginTime)
-            s_time = time.mktime(time.strptime(str(beginTime), '%Y-%m-%d'))
-            #print(s_time)
-            # 日期转化为int比较
-            diff = int(s_time) - int(e_time)
-            #print(diff)
-            if diff <= 0:
-
-                if need.needsNum <= need.nowNum and  need.needsType != "交易成功":  # 开工！
-                    #print("到时间了！需求" + need.needsDes + "已经开始！")
-                    need.needsType = "匹配完成待支付"
-                    need.save()
-                    order = Order.objects.filter(needId=need)
-
-                    # 创建订单
-                    #print(Needs.objects.get(id=need.id).matchResult.all())
-                    #print(need.matchResult.all())
-                    if (order == None): #不存在订单 -- 没执行过
-                        for group in need.matchResult.all():
-                            orderid = create_order_id(need.id, group.id)
-                            money = need.price * (group.memberNumber / need.needsNum)
-                            Order.objects.create(id=orderid, money=round(money, 2),
+         #print(beginTime)
+        s_time = time.mktime(time.strptime(str(beginTime), '%Y-%m-%d'))
+        #print(s_time)
+        # 日期转化为int比较
+        diff = int(s_time) - int(e_time)
+        #print(diff)
+        if diff <= 0:
+            if need.needsNum <= need.nowNum and  need.needsType != "交易成功":  # 开工！
+                #print("到时间了！需求" + need.needsDes + "已经开始！")
+                need.needsType = "匹配完成待支付"
+                need.save()
+                order = Order.objects.filter(needId=need)
+                # 创建订单
+                #print(Needs.objects.get(id=need.id).matchResult.all())
+                #print(need.matchResult.all())
+                if (order.count() == 0): #不存在订单 -- 没执行过
+                    for group in need.matchResult.all():
+                        orderid = create_order_id(need.id, group.id)
+                        money = need.price * (group.memberNumber / need.needsNum)
+                        Order.objects.create(id=orderid, money=round(money, 2),
                                                  moneyToFarmers=round(money, 2), moneyToApp=0, needId=need,
                                                  status="交易中")
-                            order = Order.objects.get(id=orderid)
-                            order.farmers.add(group)
-                            order.save()
-                    else: #存在订单 已经执行过了
-                        need.save()
-                else:  # 未匹配成功
-                    need.needsType = "匹配失败"
+                        order = Order.objects.get(id=orderid)
+                        order.farmers.add(group)
+                        order.save()
+                else: #存在订单 已经执行过了
                     need.save()
-                    for farmer in Farmers.objects.all():
-                        if farmer.ingNeed == need:
-                            farmer.ingNeed = None
-                            farmer.save()
+            else:  # 未匹配成功
+                need.needsType = "匹配失败"
+                need.save()
+                for farmer in Farmers.objects.all():
+                    if farmer.ingNeed == need:
+                        farmer.ingNeed = None
+                        farmer.save()
                     #print("到时间了！需求" + need.needsDes + "匹配失败！")
-
-
-        except Exception as e:
-            #print(e)
-            return 0
 
 
 # def cancel_needs(request):  # 企业取消需求
