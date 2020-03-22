@@ -15,7 +15,7 @@ from order.serializer import OrderSerializer
 import time
 import reportlab
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Image, Table, TableStyle
+from reportlab.platypus import Image, Table, TableStyle, Spacer
 
 from reportlab.platypus import SimpleDocTemplate, Image, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -438,16 +438,17 @@ def getFarmerContract(PDF_path,company,location,group,payTime,contractTime,workT
 
     mypage=[]
 
-    p = canvas.Canvas(pdf_path)
-    p.setFont('SimSun', 12)
+    # p = canvas.Canvas(pdf_path)
+    # p.setFont('SimSun', 12)
+
     content=[]
     #p.drawString(100,700,"咚咚点兵已匹配完成待支付需求简式合同")
     titleContent= '<para align=center fontSize=21 autoLeading="off">咚咚点兵对'+group.leader.name+\
                   '<br/>班组的线上简式销售合同/订单</para>'
     title = Paragraph(titleContent,title_style)
     #content.append(title)
-    title.wrapOn(p, 8 * inch, 8 * inch)
-    title.drawOn(p,5,10 * inch)
+    # title.wrapOn(p, 8 * inch, 8 * inch)
+    # title.drawOn(p,5,10 * inch)
     #第一个数字 横向，第二个数字纵向
     company=company
     applyCompany="郑州咚咚点兵信息技术有限公司"
@@ -460,8 +461,11 @@ def getFarmerContract(PDF_path,company,location,group,payTime,contractTime,workT
     peopleNum = group.memberNumber
    # print(type(peopleNum))
 
+    mypage.append(title)
 
-    textContent1="<para align=left leftIndent=100 leading=12>注册账户/供应班组：    "+group.leader.name+"班组"\
+    mypage.append(Spacer(5*inch, 0.5*inch))  # 添加空白，长度240，宽10
+
+    textContent1="<para align=left leftIndent=0 leading=12>注册账户/供应班组：    "+group.leader.name+"班组"\
          "<br/>采购单位：    "+applyCompany+ \
          "<br/>合同基础：    " + "本合同签订日前，采购单位已与咚咚平台合规注册用户"+company+"签订工时费销售合同（不含税价款24500元），因此供应班组与本合同采购单位一致确认：1.）"+company+"为本合同交易标的之终端用户，2.）采购单位属于贸易商性质并承担相关经济和法律责任，3.）供应班组承担生产商/制造商相关经济和法律责任；" + \
          "<br/>交易地点：    "+location+\
@@ -472,7 +476,7 @@ def getFarmerContract(PDF_path,company,location,group,payTime,contractTime,workT
          "<br/>班组成员信息：     " + "共"+str(peopleNum)+"人"+ \
                  "</para>"
 
-    textContent2="<para align=left leftIndent=100 leading=12><br/>工时费价款：   "+"24500 元"+\
+    textContent2="<para align=left leftIndent=0 leading=12><br/>工时费价款：   "+"24500 元"+\
          "<br/>交易金额（价、税合计）：    "+"本合同/订单交易总金额为：24500✖️（1+6%增值税率）=25970元，采购单位"+company+"将足额支付至郑州咚咚点兵信息技术有限公司银行账户且承担全额支付责任(以银行转款凭证作为履责依据）"+\
          "<br/>质量控制：    "+"由本施工企业现场专业管理人员监督负责"+ \
          "<br/>结算方式：    " + "订单不可撤销，依据约定一次性或分批履行付款义务，逾期产生每天万分之五违约金" + \
@@ -511,13 +515,16 @@ def getFarmerContract(PDF_path,company,location,group,payTime,contractTime,workT
     ]))
 
     text1 = Paragraph(textContent1,text_style)
-    text1.wrapOn(p, 7 * inch, 5 * inch)
-    text1.drawOn(p, 1, 7.5 * inch)
+    # text1.wrapOn(p, 7 * inch, 5 * inch)
+    # text1.drawOn(p, 1, 7.5 * inch)
 
+    mypage.append(text1)
 
+    #
+    # component_table.wrapOn(p,1,1)
+    # component_table.drawOn(p,1.4*inch,4.5*inch)
 
-    component_table.wrapOn(p,1,1)
-    component_table.drawOn(p,1.4*inch,4.5*inch)
+    mypage.append(component_table)
 
 
 
@@ -530,24 +537,29 @@ def getFarmerContract(PDF_path,company,location,group,payTime,contractTime,workT
 
 
     text2 = Paragraph(textContent2,text_style)
-    text2.wrapOn(p, 7 * inch, 5 * inch)
-    text2.drawOn(p, 3, 2*inch)
+    # text2.wrapOn(p, 7 * inch, 5 * inch)
+    # text2.drawOn(p, 3, 2*inch)
     #7.5*inch-component_table.height-2.5*inch
     # 2*inch
 
+    mypage.append(text2)
+
+    mypage.append(Spacer(5 * inch, 0.5 * inch))  # 添加空白，长度240，宽10
 
    # textContent.drawOn(p)
 
     partyA = "郑州咚咚点兵信息技术有限公司"
     partyB = company
-    textPA = "<para align=left leftIndent=100>甲方：郑州咚咚点兵信息技术有限公司</para>"
-    textPB = "<para align=left leftindent=320>乙方："+partyB+"</para>"
+    textPA = "<para align=left leftIndent=0>甲方：郑州咚咚点兵信息技术有限公司     乙方："+partyB+"</para>"
+   # textPB = "<para align=left leftindent=320>乙方："+partyB+"</para>"
     PPA = Paragraph(textPA,text_style)
-    PPB = Paragraph(textPB,text_style)
-    PPA.wrapOn(p,7 * inch,5 * inch)
-    PPA.drawOn(p, 3,1 * inch)
-    PPB.wrapOn(p, 7 * inch, 5 * inch)
-    PPB.drawOn(p, 7, 1 * inch)
+  #  PPB = Paragraph(textPB,text_style)
+    # PPA.wrapOn(p,7 * inch,5 * inch)
+    # PPA.drawOn(p, 3,1 * inch)
+    # PPB.wrapOn(p, 7 * inch, 5 * inch)
+    # PPB.drawOn(p, 7, 1 * inch)
+    mypage.append(PPA)
+  #  mypage.append(PPB)
     #公章
     # img=Image("./static/pic/timg.png")
     # img_url = "./static/pic/timg.png"
@@ -558,9 +570,12 @@ def getFarmerContract(PDF_path,company,location,group,payTime,contractTime,workT
     #
     #
     # p.drawImage(img_url,110,2*inch,100,100,'auto')
+    #
+    # p.showPage()
+    # p.save()
 
-    p.showPage()
-    p.save()
+    doc = SimpleDocTemplate(pdf_path)
+    doc.build(mypage)
 
     return True
     #
