@@ -7,6 +7,7 @@ import random
 from django.contrib.messages import SUCCESS, ERROR
 from django.http import HttpResponse
 from django.shortcuts import render
+from reportlab.lib import colors
 
 from needs.models import Needs
 from order.models import Order
@@ -14,7 +15,7 @@ from order.serializer import OrderSerializer
 import time
 import reportlab
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Image
+from reportlab.platypus import Image, Table, TableStyle
 
 from reportlab.platypus import SimpleDocTemplate, Image, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -279,8 +280,9 @@ def getComAndDongContract(request):
             groups = groups+group.type + str(group.classNumber) + "(" + group.leader.name + "工长)    "
         payTime = str(need.needsEndTime)
         contractTime = str(need.contractTime)
+        workType=need.needsFarmerType
 
-        successFlag = getContract(pdf_path,company,location,groups,payTime,contractTime)
+        successFlag = getContract(pdf_path,company,location,groups,payTime,contractTime,workType)
         status = need.contractType #0为未确认，1为已确认
     if(successFlag == True):
         mypath = pdf_path[1:]
@@ -302,11 +304,12 @@ def getFarmerAndDongContract(request):
     if (need.needsType == "匹配完成待支付" or need.needsType == "交易成功"):
         company = need.enterId.enterName
         location = need.needsLocation
-        groupName = group.type+str(group.classNumber)+"("+group.leader.name+"工长)"
+       # groupName = group.type+str(group.classNumber)+"("+group.leader.name+"工长)"
         payTime = str(need.needsEndTime)
         contractTime = str(need.contractTime)
-
-        successFlag = getContract(pdf_path,company,location,groupName,payTime,contractTime)
+        workType = group.type
+       # getFarmerContract(PDF_path, company, location, group, payTime, contractTime, workType)
+        successFlag = getFarmerContract(pdf_path,company,location,group,payTime,contractTime,workType)
         status = group.contractType  # 0为未确认，1为已确认
     if (successFlag == True):
         mypath = pdf_path[1:]
@@ -319,7 +322,7 @@ def getFarmerAndDongContract(request):
 
 
 
-def getContract(PDF_path,company,location,group,payTime,contractTime): #生成合同
+def getContract(PDF_path,company,location,group,payTime,contractTime,workType): #生成合同
     #response = HttpResponse(content_type='application/pdf')
     #response['Content-Disposition'] = 'attachment; filename="./media/contract/enterAndDong/somefilename.pdf"'
 
@@ -334,7 +337,7 @@ def getContract(PDF_path,company,location,group,payTime,contractTime): #生成�
     title_style.alignment = 1
 
     text_style = Style['Normal']
-    text_style.fontSize=12
+    text_style.fontSize=10
     text_style. fontName = 'SimSun'
     text_style.alignment = 1
 
@@ -343,7 +346,8 @@ def getContract(PDF_path,company,location,group,payTime,contractTime): #生成�
     p.setFont('SimSun', 12)
     content=[]
     #p.drawString(100,700,"咚咚点兵已匹配完成待支付需求简式合同")
-    titleContent= '<para align=center fontSize=21 autoLeading="off">咚咚点兵已匹配完成待支付需求简式合同</para>'
+    titleContent= '<para align=center fontSize=21 autoLeading="off">咚咚点兵对'+company+\
+                  '<br/>的线上简式销售合同/订单</para>'
     title = Paragraph(titleContent,title_style)
     #content.append(title)
     title.wrapOn(p, 8 * inch, 8 * inch)
@@ -359,19 +363,26 @@ def getContract(PDF_path,company,location,group,payTime,contractTime): #生成�
     availtime=contractTime
 
 
-    textContent="<para align=left leftIndent=100 leading=30>注册账户/采购单位：    "+company+\
+    textContent="<para align=left leftIndent=100 leading=18>注册账户/采购单位：    "+company+\
          "<br/>供应单位：    "+applyCompany+ \
          "<br/>交易地点：    "+location+\
          "<br/>已匹配班组：   "+groups+\
-         "<br/>采购内容/班组价款：   "+buycontent+\
-         "<br/>交易金额：    "+money+\
-         "<br/>质量控制：    "+"由本施工企业现场管理人员监督负责"+\
-         "<br/>支付时间：    "+paytime+\
+         "<br/>项目名称：    "+"P2020031201安阳新都小区建设二期工程"+\
+         "<br/>交易标的：     "+workType+"工时费（劳动价值包）"+ \
+         "<br/>工时数量：     " + "100工时  注：1工时=8小时" + \
+         "<br/>工时费价款：   "+"24500 元"+\
+         "<br/>交易金额（价、税合计）：    "+"本合同/订单交易总金额为：24500✖️（1+6%增值税率）=25970元，采购单位"+company+"将足额支付至郑州咚咚点兵信息技术有限公司银行账户且承担全额支付责任(以银行转款凭证作为履责依据）"+\
+         "<br/>质量控制：    "+"由本施工企业现场专业管理人员监督负责"+ \
+         "<br/>结算方式：    " + "订单不可撤销，依据约定一次性或分批履行付款义务，逾期产生每天万分之五违约金" + \
+         "<br/>质量控制：    " + " 1、本合同/订单具备合同法赋予商业合同的普遍效力；" \
+                            "<br/>2、本合同所述及的“标准工时费”是指八个小时的劳动时间产生的价值成果；"\
+                            "<br/>3、本合同交易标的为特殊商品“工时费（价值包）”，其产生过程均在采购单位所控制现场范围内且接受采购单位专业技术、管理人员的即时监督，因此本合同约定的工时费价款和数量均符合有效、无瑕疵的“商品特性”，采购单位不具备与此相关的异议主张和经济补偿权；"\
+                            "<br/>4、本合同系采购单位和供应单位通过互联网线上沟通而协定产生且所有内容均出自双方真实意思表示，因此双方认可供应单位线上电子签章有效，以线上数据库存储的合同为原件和解释基础。"+\
          "<br/>合同生成时间：  "+availtime+"</para>"
 
     text = Paragraph(textContent,text_style)
     text.wrapOn(p, 7 * inch, 5 * inch)
-    text.drawOn(p, 3, 5 * inch)
+    text.drawOn(p, 3, 3 * inch)
 
 
    # textContent.drawOn(p)
@@ -386,16 +397,16 @@ def getContract(PDF_path,company,location,group,payTime,contractTime): #生成�
     PPA.drawOn(p, 3,2 * inch)
     PPB.wrapOn(p, 7 * inch, 5 * inch)
     PPB.drawOn(p, 7, 2 * inch)
-    #公章
-    img=Image("./static/pic/timg.png")
-    img_url = "./static/pic/timg.png"
-    #img=Image("https://www.dddianbing.com/pic/timg.png")
-    #img_url = "https://www.dddianbing.com/pic/timg.png"
-    # img.drawHeight=50
-    # img.drawWidth=50
-
-
-    p.drawImage(img_url,110,2*inch,100,100,'auto')
+    # #公章
+    # img=Image("./static/pic/timg.png")
+    # img_url = "./static/pic/timg.png"
+    # #img=Image("https://www.dddianbing.com/pic/timg.png")
+    # #img_url = "https://www.dddianbing.com/pic/timg.png"
+    # # img.drawHeight=50
+    # # img.drawWidth=50
+    #
+    #
+    # p.drawImage(img_url,110,2*inch,100,100,'auto')
     p.showPage()
     p.save()
 
@@ -404,4 +415,155 @@ def getContract(PDF_path,company,location,group,payTime,contractTime): #生成�
     # mydict = {'result': SUCCESS, 'msg': '获取成功！'}
     # return HttpResponse(json.dumps(mydict), content_type="application/json")
 
+
+
+def getFarmerContract(PDF_path,company,location,group,payTime,contractTime,workType): #生成合同
+    #response = HttpResponse(content_type='application/pdf')
+    #response['Content-Disposition'] = 'attachment; filename="./media/contract/enterAndDong/somefilename.pdf"'
+    #print(group.memberNumber)
+    pdf_path = PDF_path
+    Style = getSampleStyleSheet()
+    reportlab.lib.styles.ParagraphStyle.defaults['wordWrap'] = 'CJK'
+    title_style = Style['Normal']
+    title_style.fontSize=14
+    title_style.fontName='SimSun'
+    title_style.wordWrap = 'CJK'
+    title_style.leading = 20
+    title_style.alignment = 1
+
+    text_style = Style['Normal']
+    text_style.fontSize=7
+    text_style. fontName = 'SimSun'
+    text_style.alignment = 1
+
+    mypage=[]
+
+    p = canvas.Canvas(pdf_path)
+    p.setFont('SimSun', 12)
+    content=[]
+    #p.drawString(100,700,"咚咚点兵已匹配完成待支付需求简式合同")
+    titleContent= '<para align=center fontSize=21 autoLeading="off">咚咚点兵对'+group.leader.name+\
+                  '<br/>班组的线上简式销售合同/订单</para>'
+    title = Paragraph(titleContent,title_style)
+    #content.append(title)
+    title.wrapOn(p, 8 * inch, 8 * inch)
+    title.drawOn(p,5,10 * inch)
+    #第一个数字 横向，第二个数字纵向
+    company=company
+    applyCompany="郑州咚咚点兵信息技术有限公司"
+    location=location
+    groups=group
+    buycontent="哈哈哈哈"
+    money="1234"
+    paytime=payTime
+    availtime=contractTime
+    peopleNum = group.memberNumber
+   # print(type(peopleNum))
+
+
+    textContent1="<para align=left leftIndent=100 leading=12>注册账户/供应班组：    "+group.leader.name+"班组"\
+         "<br/>采购单位：    "+applyCompany+ \
+         "<br/>合同基础：    " + "本合同签订日前，采购单位已与咚咚平台合规注册用户"+company+"签订工时费销售合同（不含税价款24500元），因此供应班组与本合同采购单位一致确认：1.）"+company+"为本合同交易标的之终端用户，2.）采购单位属于贸易商性质并承担相关经济和法律责任，3.）供应班组承担生产商/制造商相关经济和法律责任；" + \
+         "<br/>交易地点：    "+location+\
+         "<br/>项目名称：    "+"P2020031201安阳新都小区建设二期工程"+ \
+         "<br/>工种类别：   " + workType + \
+         "<br/>交易标的：     "+workType+"工时费（劳动价值包）"+ \
+         "<br/>工时数量：     " + "100工时  注：1工时=8小时" + \
+         "<br/>班组成员信息：     " + "共"+str(peopleNum)+"人"+ \
+                 "</para>"
+
+    textContent2="<para align=left leftIndent=100 leading=12><br/>工时费价款：   "+"24500 元"+\
+         "<br/>交易金额（价、税合计）：    "+"本合同/订单交易总金额为：24500✖️（1+6%增值税率）=25970元，采购单位"+company+"将足额支付至郑州咚咚点兵信息技术有限公司银行账户且承担全额支付责任(以银行转款凭证作为履责依据）"+\
+         "<br/>质量控制：    "+"由本施工企业现场专业管理人员监督负责"+ \
+         "<br/>结算方式：    " + "订单不可撤销，依据约定一次性或分批履行付款义务，逾期产生每天万分之五违约金" + \
+         "<br/>质量控制：    " + " 1、本合同/订单具备合同法赋予商业合同的普遍效力；" \
+                            "<br/>2、本合同所述及的“标准工时费”是指八个小时的劳动时间产生的价值成果；"\
+                            "<br/>3、本合同交易标的为特殊商品“工时费（价值包）”，其产生过程均在采购单位所控制现场范围内且接受采购单位专业技术、管理人员的即时监督，因此本合同约定的工时费价款和数量均符合有效、无瑕疵的“商品特性”，采购单位不具备与此相关的异议主张和经济补偿权；"\
+                            "<br/>4、本合同系采购单位和供应单位通过互联网线上沟通而协定产生且所有内容均出自双方真实意思表示，因此双方认可供应单位线上电子签章有效，以线上数据库存储的合同为原件和解释基础。"+\
+         "<br/>合同生成时间：  "+availtime+"</para>"
+
+    table_data=[
+        ["班组长: "+group.leader.name,"","",""],
+        ["身份证号: "+group.leader.IDCard,"联系方式: "+group.leader.phonenumber,"银行: "+group.leader.Bank,"银行卡号: "+group.leader.BankNumber],
+        ["编号","姓名","身份证号","联系方式"]
+    ]
+
+    num=1
+    members = FarmersMember.objects.filter(group=group)
+    for member in members:
+        info = [str(num),member.name,member.IDCard,member.phoneNumber]
+        table_data.append(info)
+        num=num+1
+
+    component_table = Table(table_data, [90, 80, 130, 130])
+    component_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'SimSun'),  # 字体
+        ('FONTSIZE', (0, 0), (-1, -1), 6),  # 字体大小
+        #('SPAN', (0, 0), (3, 1)),  # 合并前两行
+       # ('BACKGROUND', (0, 0), (-1, 0), colors.lightskyblue),  # 设置第一行背景颜色
+      #  ('SPAN', (-1, 0), (-2, 0)),  # 合并第一行后两列
+        # ('ALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # 对齐
+       # ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # 对齐
+      #  ('LINEBEFORE', (0, 0), (0, -1), 0.1, colors.grey),  # 设置表格左边线颜色为灰色，线宽为0.1
+        #('TEXTCOLOR', (0, 1), (-2, -1), colors.royalblue),  # 设置表格内文字颜色
+        ('GRID', (0, 2), (-1, -1), 0.5, colors.grey), # 设置表格框线为灰色，线宽为0.5
+        ('BOX', (0, 0), (-1, -1), 0.7, colors.black)
+    ]))
+
+    text1 = Paragraph(textContent1,text_style)
+    text1.wrapOn(p, 7 * inch, 5 * inch)
+    text1.drawOn(p, 1, 7.5 * inch)
+
+
+
+    component_table.wrapOn(p,1,1)
+    component_table.drawOn(p,1.4*inch,4.5*inch)
+
+
+
+    #p.append(component_table)
+
+
+
+
+#    component_table.height
+
+
+    text2 = Paragraph(textContent2,text_style)
+    text2.wrapOn(p, 7 * inch, 5 * inch)
+    text2.drawOn(p, 3, 2*inch)
+    #7.5*inch-component_table.height-2.5*inch
+    # 2*inch
+
+
+   # textContent.drawOn(p)
+
+    partyA = "郑州咚咚点兵信息技术有限公司"
+    partyB = company
+    textPA = "<para align=left leftIndent=100>甲方：郑州咚咚点兵信息技术有限公司</para>"
+    textPB = "<para align=left leftindent=320>乙方："+partyB+"</para>"
+    PPA = Paragraph(textPA,text_style)
+    PPB = Paragraph(textPB,text_style)
+    PPA.wrapOn(p,7 * inch,5 * inch)
+    PPA.drawOn(p, 3,1 * inch)
+    PPB.wrapOn(p, 7 * inch, 5 * inch)
+    PPB.drawOn(p, 7, 1 * inch)
+    #公章
+    # img=Image("./static/pic/timg.png")
+    # img_url = "./static/pic/timg.png"
+    # #img=Image("https://www.dddianbing.com/pic/timg.png")
+    # #img_url = "https://www.dddianbing.com/pic/timg.png"
+    # # img.drawHeight=50
+    # # img.drawWidth=50
+    #
+    #
+    # p.drawImage(img_url,110,2*inch,100,100,'auto')
+
+    p.showPage()
+    p.save()
+
+    return True
+    #
+    # mydict = {'result': SUCCESS, 'msg': '获取成功！'}
+    # return HttpResponse(json.dumps(mydict), content_type="application/json")
 

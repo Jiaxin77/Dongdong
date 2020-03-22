@@ -31,7 +31,7 @@ try:
     # 设置定时任务，选择方式为interval，时间间隔为10s
     # 另一种方式为每天固定时间执行任务，对应代码为：
     @register_job(scheduler, 'cron', day_of_week='mon-sun', hour='1', minute='01', second='00', id='task_time')
-    #@register_job(scheduler,"interval", minutes=5)
+    @register_job(scheduler,"interval", seconds=5)
 
     def my_job():
         # 这里写你要执行的任务
@@ -329,17 +329,40 @@ def begin_needs(request):  # 企业开始需求（提前开工）
                 # 创建订单
                 # print(Needs.objects.get(id=need.id).matchResult.all())
                 # print(need.matchResult.all())
-                if (order.count() == 0):  # 不存在订单 -- 没执行过
-                    for group in need.matchResult.all():
-                        orderid = create_order_id(need.id, group.id)
-                        money = need.price * (group.memberNumber / need.needsNum)
-                        Order.objects.create(id=orderid, money=round(money, 2),
-                                             moneyToFarmers=round(money, 2), moneyToApp=0, needId=need,
-                                             status="交易中")
-                        order = Order.objects.get(id=orderid)
-                        order.farmers.add(group)
-                        order.save()
-                        flag2=1
+                if (order.count() != need.matchResult.all().count()):  # 订单数目与匹配数目不一致
+
+                    if (order.count() == 0):  # 不存在订单 -- 没执行过
+                        for group in need.matchResult.all():
+                            orderid = create_order_id(need.id, group.id)
+                            money = need.price * (group.memberNumber / need.needsNum)
+                            Order.objects.create(id=orderid, money=round(money, 2),
+                                                 moneyToFarmers=round(money, 2), moneyToApp=0, needId=need,
+                                                 status="交易中")
+                            thisorder = Order.objects.get(id=orderid)
+                            thisorder.farmers.add(group)
+                            thisorder.save()
+                    if (order.count() > need.matchResult.all().count()):  # 有产生多了的订单
+                        Order.objects.filter(needId=need).delete()  # 删除所有该需求订单
+                        for group in need.matchResult.all():
+                            orderid = create_order_id(need.id, group.id)
+                            money = need.price * (group.memberNumber / need.needsNum)
+                            Order.objects.create(id=orderid, money=round(money, 2),
+                                                 moneyToFarmers=round(money, 2), moneyToApp=0, needId=need,
+                                                 status="交易中")
+                            thisorder = Order.objects.get(id=orderid)
+                            thisorder.farmers.add(group)
+                            thisorder.save()
+                # if (order.count() == 0):  # 不存在订单 -- 没执行过
+                #     for group in need.matchResult.all():
+                #         orderid = create_order_id(need.id, group.id)
+                #         money = need.price * (group.memberNumber / need.needsNum)
+                #         Order.objects.create(id=orderid, money=round(money, 2),
+                #                              moneyToFarmers=round(money, 2), moneyToApp=0, needId=need,
+                #                              status="交易中")
+                #         order = Order.objects.get(id=orderid)
+                #         order.farmers.add(group)
+                #         order.save()
+                #         flag2=1
                 else:  # 存在订单 已经执行过了
                     need.save()
                 mydict = {'result': SUCCESS, 'msg': '成功开工！','flag1':flag1,'flag2':flag2}
@@ -419,16 +442,29 @@ def auto_begin_needs():  # 自动开始需求（根据系统时间）
                 # 创建订单
                 #print(Needs.objects.get(id=need.id).matchResult.all())
                 #print(need.matchResult.all())
-                if (order.count() == 0): #不存在订单 -- 没执行过
-                    for group in need.matchResult.all():
-                        orderid = create_order_id(need.id, group.id)
-                        money = need.price * (group.memberNumber / need.needsNum)
-                        Order.objects.create(id=orderid, money=round(money, 2),
-                                                 moneyToFarmers=round(money, 2), moneyToApp=0, needId=need,
-                                                 status="交易中")
-                        order = Order.objects.get(id=orderid)
-                        order.farmers.add(group)
-                        order.save()
+                if(order.count()!=need.matchResult.all().count()): #订单数目与匹配数目不一致
+
+                    if (order.count() == 0): #不存在订单 -- 没执行过
+                        for group in need.matchResult.all():
+                            orderid = create_order_id(need.id, group.id)
+                            money = need.price * (group.memberNumber / need.needsNum)
+                            Order.objects.create(id=orderid, money=round(money, 2),
+                                                moneyToFarmers=round(money, 2), moneyToApp=0, needId=need,
+                                                status="交易中")
+                            thisorder = Order.objects.get(id=orderid)
+                            thisorder.farmers.add(group)
+                            thisorder.save()
+                    if(order.count()>need.matchResult.all().count()):#有产生多了的订单
+                        Order.objects.filter(needId=need).delete() #删除所有该需求的
+                        for group in need.matchResult.all():
+                            orderid = create_order_id(need.id, group.id)
+                            money = need.price * (group.memberNumber / need.needsNum)
+                            Order.objects.create(id=orderid, money=round(money, 2),
+                                                moneyToFarmers=round(money, 2), moneyToApp=0, needId=need,
+                                                status="交易中")
+                            thisorder = Order.objects.get(id=orderid)
+                            thisorder.farmers.add(group)
+                            thisorder.save()
                 else: #存在订单 已经执行过了
                     need.save()
             else:  # 未匹配成功

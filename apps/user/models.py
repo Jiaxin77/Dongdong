@@ -35,7 +35,7 @@ class Enterprise(models.Model):
     scope = models.CharField(max_length=1000, null=True, verbose_name="经营范围")
     nowProject = models.CharField(max_length=1000,null=True,verbose_name="当前工程")
     #icon = models.ImageField(upload_to='head',null=True)
-
+    phoneNumber = models.CharField(max_length=1000,null=True,verbose_name="手机号")
     #资质信息
 
 
