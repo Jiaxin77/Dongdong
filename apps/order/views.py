@@ -374,7 +374,7 @@ def getContract(PDF_path,company,location,group,payTime,contractTime,workType): 
          "<br/>交易金额（价、税合计）：    "+"本合同/订单交易总金额为：24500✖️（1+6%增值税率）=25970元，采购单位"+company+"将足额支付至郑州咚咚点兵信息技术有限公司银行账户且承担全额支付责任(以银行转款凭证作为履责依据）"+\
          "<br/>质量控制：    "+"由本施工企业现场专业管理人员监督负责"+ \
          "<br/>结算方式：    " + "订单不可撤销，依据约定一次性或分批履行付款义务，逾期产生每天万分之五违约金" + \
-         "<br/>质量控制：    " + " 1、本合同/订单具备合同法赋予商业合同的普遍效力；" \
+         "<br/>其他协定内容：    " + " 1、本合同/订单具备合同法赋予商业合同的普遍效力；" \
                             "<br/>2、本合同所述及的“标准工时费”是指八个小时的劳动时间产生的价值成果；"\
                             "<br/>3、本合同交易标的为特殊商品“工时费（价值包）”，其产生过程均在采购单位所控制现场范围内且接受采购单位专业技术、管理人员的即时监督，因此本合同约定的工时费价款和数量均符合有效、无瑕疵的“商品特性”，采购单位不具备与此相关的异议主张和经济补偿权；"\
                             "<br/>4、本合同系采购单位和供应单位通过互联网线上沟通而协定产生且所有内容均出自双方真实意思表示，因此双方认可供应单位线上电子签章有效，以线上数据库存储的合同为原件和解释基础。"+\
@@ -414,6 +414,39 @@ def getContract(PDF_path,company,location,group,payTime,contractTime,workType): 
     #
     # mydict = {'result': SUCCESS, 'msg': '获取成功！'}
     # return HttpResponse(json.dumps(mydict), content_type="application/json")
+
+
+def getFarmerContractContent(request):
+    needid = request.GET.get("needid")
+    #print("哈哈哈")
+
+   # print(needid)
+    groupid = request.GET.get("groupid")
+   # print(groupid)
+    need = Needs.objects.get(id=needid)
+    group = Farmers.objects.get(id=groupid)
+    pdf_path = "./media/contract/famAndDong/" + "Con" + needid + "_" + groupid + ".pdf"
+    if (need.needsType == "匹配完成待支付" or need.needsType == "交易成功"):
+        company = need.enterId.enterName
+        location = need.needsLocation
+       # groupName = group.type+str(group.classNumber)+"("+group.leader.name+"工长)"
+        payTime = str(need.needsEndTime)
+        contractTime = str(need.contractTime)
+        workType = group.type
+       # getFarmerContract(PDF_path, company, location, group, payTime, contractTime, workType)
+      #  successFlag = getFarmerContract(pdf_path,company,location,group,payTime,contractTime,workType)
+        group_ser = FarmersSerializer(group)
+        farmers = FarmersMember.objects.filter(group=group)
+        farmers_ser = FarmersMemberSerializer(farmers,many=True)
+        content={'company':company,'location':location,'payTime':payTime,'contractTime':contractTime,'workType':workType,'group':group_ser.data,'members':farmers_ser.data}
+        status = group.contractType  # 0为未确认，1为已确认
+        mydict = {'result': SUCCESS, 'data': content,'status':status}
+        return HttpResponse(json.dumps(mydict), content_type="application/json")
+
+    else:
+        mydict = {'result': ERROR, 'msg': '需求状态未匹配完成，获取失败！'}
+        return HttpResponse(json.dumps(mydict), content_type="application/json")
+
 
 
 
@@ -471,19 +504,25 @@ def getFarmerContract(PDF_path,company,location,group,payTime,contractTime,workT
          "<br/>交易地点：    "+location+\
          "<br/>项目名称：    "+"P2020031201安阳新都小区建设二期工程"+ \
          "<br/>工种类别：   " + workType + \
-         "<br/>交易标的：     "+workType+"工时费（劳动价值包）"+ \
          "<br/>工时数量：     " + "100工时  注：1工时=8小时" + \
          "<br/>班组成员信息：     " + "共"+str(peopleNum)+"人"+ \
                  "</para>"
 
-    textContent2="<para align=left leftIndent=0 leading=12><br/>工时费价款：   "+"24500 元"+\
-         "<br/>交易金额（价、税合计）：    "+"本合同/订单交易总金额为：24500✖️（1+6%增值税率）=25970元，采购单位"+company+"将足额支付至郑州咚咚点兵信息技术有限公司银行账户且承担全额支付责任(以银行转款凭证作为履责依据）"+\
-         "<br/>质量控制：    "+"由本施工企业现场专业管理人员监督负责"+ \
-         "<br/>结算方式：    " + "订单不可撤销，依据约定一次性或分批履行付款义务，逾期产生每天万分之五违约金" + \
-         "<br/>质量控制：    " + " 1、本合同/订单具备合同法赋予商业合同的普遍效力；" \
-                            "<br/>2、本合同所述及的“标准工时费”是指八个小时的劳动时间产生的价值成果；"\
-                            "<br/>3、本合同交易标的为特殊商品“工时费（价值包）”，其产生过程均在采购单位所控制现场范围内且接受采购单位专业技术、管理人员的即时监督，因此本合同约定的工时费价款和数量均符合有效、无瑕疵的“商品特性”，采购单位不具备与此相关的异议主张和经济补偿权；"\
-                            "<br/>4、本合同系采购单位和供应单位通过互联网线上沟通而协定产生且所有内容均出自双方真实意思表示，因此双方认可供应单位线上电子签章有效，以线上数据库存储的合同为原件和解释基础。"+\
+    textContent2="<para align=left leftIndent=0 leading=12>" +\
+        "<br/>交易标的：     "+ workType +"工时费（劳动价值包）"+ \
+        "<br/>交易金额：   "+"25970 x️（1-9.72%）=23445.72元"+ \
+        "<br/>工时费单价：     " + "23445/100=234.45元" + \
+        "<br/>工时总数量：     " + "100工时" + \
+        "<br/>本组提供工时：     " + "10工时" + \
+        "<br/>本组交易金额：     " + "234.45 x 10=2344.5元" + \
+         "<br/>质量控制：    "+"由本协议述及的终端用户指派的现场专业管理人员负责即时检验和工序组织，供应班组全力配合"+ \
+         "<br/>结算方式：    " + "1）采购单位履行对班组支付义务并承担相关经济责任，但班组对采购单位的结算要求权和其他利益主张仅在终端用户对咚咚平台（采购单位）完成支付后方可进行；2）采购单位收到终端用户相关款项后，1个工作日内完成对班组的支付义务；3）结算款项将分批或一次性转入班组长银行账户；" + \
+         "<br/>其他协定内容：    " + "  1、本合同/订单具备合同法赋予商业合同的普遍效力； " \
+                            "<br/>2、本合同所述及的“标准工时费”是指八个小时的劳动时间产生的价值成果；" \
+                            "<br/>3、本合同交易标的为特殊商品“工时费（价值包）”，其产生过程均在终端用户所控制现场范围内且接受现场专业技术、管理人员的即时监督，因此本合同约定的工时费的有效性、质量保障均由供应班组单独承担；" \
+                            "<br/>4、本合同班组系单工种专业作业班组、具备个体工商户（虽未注册但实质从事个体经营）的性质，班组长具备班组牵头人的法律地位（所有班组成员个人真实信息录入咚咚平台后，即全体成员表示对本事项的认可）；" \
+                            "<br/>5、班组长对班组所有成员个人身份信息真实性和有效性承担一切法律责任和后果。" \
+                            "<br/>6、班组长代表班组全体成员与采购单位通过互联网线上沟通而协定产生本合同且所有内容均出自双方真实意思表示，因此双方认可采购单位线上电子签章有效，以线上数据库存储的合同为原件和解释基础。"+\
          "<br/>合同生成时间：  "+availtime+"</para>"
 
     table_data=[
@@ -550,16 +589,16 @@ def getFarmerContract(PDF_path,company,location,group,payTime,contractTime,workT
 
     partyA = "郑州咚咚点兵信息技术有限公司"
     partyB = company
-    textPA = "<para align=left leftIndent=0>甲方：郑州咚咚点兵信息技术有限公司     乙方："+partyB+"</para>"
-   # textPB = "<para align=left leftindent=320>乙方："+partyB+"</para>"
+    textPA = "<para align=left leftIndent=0>甲方：郑州咚咚点兵信息技术有限公司</para>"
+    textPB = "<para align=left leftindent=0>乙方："+partyB+"</para>"
     PPA = Paragraph(textPA,text_style)
-  #  PPB = Paragraph(textPB,text_style)
+    PPB = Paragraph(textPB,text_style)
     # PPA.wrapOn(p,7 * inch,5 * inch)
     # PPA.drawOn(p, 3,1 * inch)
     # PPB.wrapOn(p, 7 * inch, 5 * inch)
     # PPB.drawOn(p, 7, 1 * inch)
     mypage.append(PPA)
-  #  mypage.append(PPB)
+    mypage.append(PPB)
     #公章
     # img=Image("./static/pic/timg.png")
     # img_url = "./static/pic/timg.png"

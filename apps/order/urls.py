@@ -15,6 +15,7 @@ urlpatterns = [
     path('getComAndDongContract', views.getComAndDongContract, name='getComAndDongContract'),
     path('getFarmerAndDongContract',views.getFarmerAndDongContract,name='getFarmerAndDongContract'),
     path('postFarmerContractConfirm',views.postFarmerContractConfirm,name='postFarmerContractConfirm'),
-    path('postEnterContractConfirm',views.postEnterContractConfirm,name='postFarmerContractConfirm')
+    path('postEnterContractConfirm',views.postEnterContractConfirm,name='postFarmerContractConfirm'),
+    path('getFarmerContractContent',views.getFarmerContractContent,name='getFarmerContractContent')
 
 ]
